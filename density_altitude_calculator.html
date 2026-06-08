@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Density Altitude Calculator</title>
+<!-- PWA: manifest, ikony, barva motivu — appku pak lze "nainstalovat" na plochu telefonu -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1720">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DensityAlt">
+<style>
+  :root{
+    --bg:#0f1720;
+    --panel:#1a2530;
+    --accent:#3fa9f5;
+    --accent2:#f5a623;
+    --text:#e7eef5;
+    --muted:#8aa0b3;
+    --good:#3ecf8e;
+    --warn:#f5a623;
+    --bad:#f5524a;
+    --border:#2a3946;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(180deg,#0b121a,#15212c);
+    color:var(--text);
+    padding:24px;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+  }
+  h1{
+    font-size:1.6rem;
+    margin:0 0 4px 0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .subtitle{
+    color:var(--muted);
+    margin:0 0 24px 0;
+    font-size:0.95rem;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:760px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+  }
+  .panel h2{
+    margin:0 0 16px 0;
+    font-size:1.05rem;
+    color:var(--text);
+  }
+  label{
+    display:block;
+    font-size:0.85rem;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .field{
+    margin-bottom:16px;
+  }
+  .input-row{
+    display:flex;
+    gap:8px;
+  }
+  input[type=number]{
+    flex:1;
+    background:#0f1822;
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    padding:10px 12px;
+    font-size:1rem;
+    width:100%;
+  }
+  input[type=number]:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  select{
+    background:#0f1822;
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    padding:10px 12px;
+    font-size:0.9rem;
+  }
+  select:focus{outline:none;border-color:var(--accent);}
+  .unit-toggle{
+    display:flex;
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .unit-toggle button{
+    background:#0f1822;
+    border:none;
+    color:var(--muted);
+    padding:10px 14px;
+    cursor:pointer;
+    font-size:0.85rem;
+  }
+  .unit-toggle button.active{
+    background:var(--accent);
+    color:#0b121a;
+    font-weight:600;
+  }
+  .results{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .result-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:12px 14px;
+    background:#0f1822;
+    border-radius:10px;
+    border:1px solid var(--border);
+  }
+  .result-row .label{
+    color:var(--muted);
+    font-size:0.85rem;
+    margin:0;
+  }
+  .result-row .value{
+    font-size:1.3rem;
+    font-weight:700;
+  }
+  .result-row.highlight{
+    border-color:var(--accent);
+    background:rgba(63,169,245,0.08);
+  }
+  .result-row.highlight .value{
+    color:var(--accent);
+    font-size:1.6rem;
+  }
+  .badge{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:0.78rem;
+    font-weight:600;
+    margin-top:4px;
+  }
+  .badge.good{background:rgba(62,207,142,0.15);color:var(--good);}
+  .badge.warn{background:rgba(245,166,35,0.15);color:var(--warn);}
+  .badge.bad{background:rgba(245,82,74,0.15);color:var(--bad);}
+  .gauge-wrap{
+    margin-top:8px;
+    position:relative;
+    height:280px;
+    background:#0f1822;
+    border-radius:12px;
+    border:1px solid var(--border);
+    padding:16px 50px 16px 16px;
+    display:flex;
+    align-items:flex-end;
+  }
+  .gauge-track{
+    position:relative;
+    width:46px;
+    height:100%;
+    background:linear-gradient(180deg,#1d3a52,#0f1822);
+    border-radius:8px;
+    overflow:visible;
+    margin:0 auto;
+  }
+  .gauge-marker{
+    position:absolute;
+    left:-6px;
+    right:-6px;
+    height:3px;
+    border-radius:2px;
+  }
+  .gauge-marker .mtag{
+    position:absolute;
+    left:64px;
+    top:-9px;
+    font-size:0.78rem;
+    white-space:nowrap;
+  }
+  .gauge-marker .mline{
+    position:absolute;
+    left:0;right:0;top:0;
+    height:3px;
+    border-radius:2px;
+  }
+  .runway-wrap{
+    margin-top:14px;
+    background:#0f1822;
+    border-radius:12px;
+    border:1px solid var(--border);
+    padding:10px 6px;
+  }
+  .runway-wrap svg{display:block;width:100%;height:auto;}
+  .legend{
+    display:flex;
+    gap:18px;
+    margin-top:14px;
+    flex-wrap:wrap;
+    font-size:0.8rem;
+    color:var(--muted);
+  }
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .note{
+    font-size:0.85rem;
+    color:var(--muted);
+    line-height:1.5;
+    margin-top:16px;
+  }
+  .note strong{color:var(--text);}
+  footer{
+    margin-top:28px;
+    color:var(--muted);
+    font-size:0.78rem;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛩️ Density Altitude Calculator</h1>
+  <p class="subtitle">Spočítej hustotní výšku pro tvůj let — zadej nadmořskou výšku letiště, teplotu a tlak (QNH).</p>
+
+  <div class="panel" style="margin-bottom:20px;">
+    <h2>📍 Letiště / SLZ — vlastní databáze</h2>
+    <p class="subtitle" style="margin-bottom:10px;">
+      Vyber letiště a aplikace automaticky předvyplní nadmořskou výšku i parametry dráhy v sekcích níže.
+    </p>
+    <div class="field" style="margin-bottom:0;">
+      <label for="airportSelect">Letiště / SLZ</label>
+      <select id="airportSelect" style="width:100%;">
+        <option value="">— Nevybráno (zadej hodnoty ručně) —</option>
+      </select>
+    </div>
+    <div class="note" id="airportInfo" style="display:none;"></div>
+
+    <div class="field" id="runwayEndField" style="display:none; margin-top:14px; margin-bottom:0;">
+      <label for="runwayEndSelect">Aktivní dráha (práh, ze kterého vzlétáš — pro výpočet úhlu větru)</label>
+      <select id="runwayEndSelect" style="width:100%;"></select>
+    </div>
+
+    <div id="weatherFetchField" style="display:none; margin-top:14px;">
+      <button type="button" id="fetchWeatherBtn" class="unit-toggle" style="border:1px solid var(--border); background:#0f1822; color:var(--text); padding:10px 16px; border-radius:8px; cursor:pointer; font-size:0.9rem;">
+        🌬️ Načíst aktuální počasí (Open-Meteo)
+      </button>
+      <div class="note" id="weatherInfo" style="display:none;"></div>
+    </div>
+
+    <div class="note" style="margin-top:10px;">
+      <strong>Pozor — ověřeno k AIRAC 28 MAY 26, ne živá data:</strong> Zkoušel jsem napojit appku přímo na AIP ŘLP ČR
+      (aim.rlp.cz) i na databázi dl.cz, kterou jsi poslal — AIP nemá žádné API (jen PDF/HTML vázané na AIRAC cykly)
+      a dl.cz svůj datový endpoint chrání přihlášením (HTTP 401), takže ho nejde číst zvenčí. Navíc by statickou
+      HTML appku spuštěnou z disku stejně blokoval CORS. Proto je tahle databáze <strong>ručně sestavený statický
+      snímek</strong> z oficiální VFR příručky — funguje offline, ale je potřeba ji čas od času ručně zaktualizovat.
+      Zatím obsahuje jen LKZB; další letiště/SLZ lze doplnit stejným způsobem.
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Vstupy</h2>
+
+      <div class="field">
+        <label for="elevation">Nadmořská výška letiště (ft MSL)</label>
+        <input type="number" id="elevation" value="2000" step="1">
+      </div>
+
+      <div class="field">
+        <label>Venkovní teplota (OAT)</label>
+        <div class="input-row">
+          <input type="number" id="temp" value="35" step="0.5">
+          <div class="unit-toggle" id="tempUnit">
+            <button data-unit="C" class="active">°C</button>
+            <button data-unit="F">°F</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Tlak (QNH / altimeter setting)</label>
+        <div class="input-row">
+          <input type="number" id="pressure" value="1013.25" step="0.1">
+          <div class="unit-toggle" id="pressUnit">
+            <button data-unit="hpa" class="active">hPa</button>
+            <button data-unit="inhg">inHg</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Tip:</strong> Standardní tlak na hladině moře je 1013.25 hPa (29.92 inHg) a standardní teplota je 15 °C. Čím víc se aktuální podmínky liší od těchto hodnot směrem k teplu / nízkému tlaku / vysoké nadmořské výšce, tím vyšší bude hustotní výška vůči skutečné.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Výsledky</h2>
+      <div class="results">
+        <div class="result-row">
+          <p class="label">Tlaková výška (Pressure Altitude)</p>
+          <p class="value" id="paOut">—</p>
+        </div>
+        <div class="result-row">
+          <p class="label">ISA teplota v této výšce</p>
+          <p class="value" id="isaOut">—</p>
+        </div>
+        <div class="result-row highlight">
+          <div>
+            <p class="label">Hustotní výška (Density Altitude)</p>
+            <span class="badge" id="badgeOut"></span>
+          </div>
+          <p class="value" id="daOut">—</p>
+        </div>
+        <div class="result-row">
+          <p class="label">Rozdíl oproti nadmořské výšce letiště</p>
+          <p class="value" id="diffOut">—</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:20px;">
+    <h2>✈️ Hmotnost a vyvážení — Roko VIA</h2>
+    <p class="subtitle" style="margin-bottom:18px;">
+      Posouzení dovoleného zatížení podle tabulky <strong>6.3 Dovolené užitečné zatížení</strong> z letové příručky VIA
+      (prázdná hmotnost 348,5 kg, MTOW 600 kg, rozsah těžiště 23–36 % SAT, min. hmotnost pilota 55 kg).
+    </p>
+    <div class="grid">
+      <div>
+        <div class="field">
+          <label for="fuelLevel">Množství paliva</label>
+          <select id="fuelLevel" style="width:100%;">
+            <option value="0">30 min (8 l / 6 kg)</option>
+            <option value="1">1/4 nádrže (32,5 l / 23,75 kg)</option>
+            <option value="2" selected>1/2 nádrže (65 l / 47,5 kg)</option>
+            <option value="3">3/4 nádrže (97,5 l / 71,25 kg)</option>
+            <option value="4">Plné nádrže (130 l / 95 kg)</option>
+            <option value="custom">Zadat vlastní množství...</option>
+          </select>
+        </div>
+        <div class="field" id="customFuelField" style="display:none;">
+          <label>Vlastní množství paliva</label>
+          <div class="input-row">
+            <input type="number" id="customFuelLiters" value="65" step="1">
+            <div class="unit-toggle" id="fuelUnitToggle">
+              <button data-unit="l" class="active">litry</button>
+              <button data-unit="kg">kg</button>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="baggageConfig">Zavazadla</label>
+          <select id="baggageConfig" style="width:100%;">
+            <option value="0">Bez zavazadel (0 kg)</option>
+            <option value="1">1/2 zadní prostor (7,5 kg)</option>
+            <option value="2">Celý zadní prostor (15 kg)</option>
+            <option value="3">1/2 křídelních prostorů (20 kg)</option>
+            <option value="4">1/2 zadní + 1/2 křídelní (27,5 kg)</option>
+            <option value="5">1/2 zadní + celý křídelní (47,5 kg)</option>
+            <option value="6">Celý zadní + celý křídelní (55 kg)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="pilotWeight">Hmotnost pilota (kg)</label>
+          <input type="number" id="pilotWeight" value="85" step="1">
+        </div>
+        <div class="field">
+          <label for="paxWeight">Hmotnost spolucestujícího (kg) — 0, pokud létáš sám</label>
+          <input type="number" id="paxWeight" value="0" step="1">
+        </div>
+      </div>
+      <div class="results">
+        <div class="result-row highlight">
+          <div>
+            <p class="label">Dovolená hmotnost posádky (dle tabulky 6.3)</p>
+            <span class="badge" id="wbBadge"></span>
+          </div>
+          <p class="value" id="wbAllowedCrew">—</p>
+        </div>
+        <div class="result-row">
+          <p class="label">Zadaná hmotnost posádky (pilot + spolucestující)</p>
+          <p class="value" id="wbActualCrew">—</p>
+        </div>
+        <div class="result-row">
+          <p class="label">Rezerva do limitu posádky</p>
+          <p class="value" id="wbMargin">—</p>
+        </div>
+        <div class="result-row">
+          <p class="label">Odhad vzletové hmotnosti (prázdná + palivo + zavazadla + posádka)</p>
+          <p class="value" id="wbTakeoffWeight">—</p>
+        </div>
+        <div class="result-row">
+          <p class="label">Zbývající užitečné zatížení do MTOW 600 kg</p>
+          <p class="value" id="wbUsefulLoad">—</p>
+        </div>
+      </div>
+    </div>
+    <div class="note" id="wbExplain"></div>
+    <div class="note">
+      <strong>Pozor — nesrovnalost v manuálu:</strong> Oddíl 2.6 uvádí maximální hmotnost zavazadel v zadní části trupu
+      <strong>10 kg</strong>, zatímco tabulka 6.3 počítá s konfigurací „celý zadní“ až <strong>15 kg</strong>.
+      Než zatížíš zadní prostor nad 10 kg, ověř si aktuální platný limit ve svém výtisku příručky / vážicím protokolu (Oddíl 6, Protokol o hmotnosti a poloze těžiště) — limity se mohou lišit podle sériového čísla a revize.
+      Max. hmotnost zavazadel v každém křídle je <strong>20 kg</strong> (pokud je úložný prostor instalován).
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:20px;">
+    <h2>🛫 Odhad délky vzletu — Roko VIA</h2>
+    <p class="subtitle" style="margin-bottom:6px;">
+      Vychází ze základních hodnot z příručky (5.2.3, klapky 10°, <strong>platné pro MTOW 600 kg a podmínky MSA</strong>:
+      zpevněná dráha 220 m rozjezd / 270 m přes překážku 15 m, travnatá 230 m / 280 m), přepočtených pomocí
+      <strong>obecných leteckých pravidel palce</strong> na hustotní výšku, aktuální hmotnost a vítr.
+    </p>
+    <div class="note" style="margin-top:0;">
+      <strong>Důležité:</strong> Příručka VIA neobsahuje vlastní korekční grafy pro hustotní výšku, hmotnost ani vítr —
+      tohle je proto <strong>orientační odhad podle obecných pravidel palce</strong>, ne oficiální číslo z letové příručky.
+      Skutečná délka vzletu se může lišit. K odhadu si vždy přičti vlastní bezpečnostní rezervu (běžně se doporučuje
+      násobit odhad faktorem 1,3–1,5×) a zohledni stav a sklon dráhy, techniku pilotování a stav letadla.
+    </div>
+
+    <div class="grid" style="margin-top:6px;">
+      <div>
+        <div class="field">
+          <label for="rwSurface">Povrch dráhy</label>
+          <select id="rwSurface" style="width:100%;">
+            <option value="paved">Zpevněná (suchý beton/asfalt)</option>
+            <option value="grass">Travnatá</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="rwLength">Dostupná délka dráhy (m)</label>
+          <input type="number" id="rwLength" value="400" step="10">
+        </div>
+        <div class="field">
+          <label>Rychlost větru</label>
+          <div class="input-row">
+            <input type="number" id="windSpeed" value="0" step="0.5">
+            <div class="unit-toggle" id="windUnitToggle">
+              <button data-unit="kmh" class="active">km/h</button>
+              <button data-unit="kt">kt</button>
+              <button data-unit="ms">m/s</button>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="windAngle">Úhel větru vůči ose dráhy (0° = přímo proti, 90° = boční, 180° = po směru)</label>
+          <input type="number" id="windAngle" value="0" step="5" min="0" max="180">
+        </div>
+        <div class="note" style="margin-top:0;">
+          Z modulů výše se přebírá aktuální <strong>hustotní výška</strong> a odhadovaná <strong>vzletová hmotnost</strong> —
+          uprav je v příslušných sekcích, pokud chceš jiný scénář.
+        </div>
+      </div>
+      <div class="results">
+        <div class="result-row">
+          <p class="label">Použitá hustotní výška / vzletová hmotnost</p>
+          <p class="value" id="toInputsUsed" style="font-size:1rem;">—</p>
+        </div>
+        <div class="result-row">
+          <p class="label">Složky větru (čelní / boční)</p>
+          <p class="value" id="toWindComponents" style="font-size:1.1rem;">—</p>
+        </div>
+        <div class="result-row highlight">
+          <div>
+            <p class="label">Odhad délky rozjezdu (ground roll)</p>
+            <span class="badge" id="toBadgeRoll"></span>
+          </div>
+          <p class="value" id="toRollOut">—</p>
+        </div>
+        <div class="result-row highlight">
+          <div>
+            <p class="label">Odhad délky vzletu přes překážku 15 m (50 ft)</p>
+            <span class="badge" id="toBadgeObstacle"></span>
+          </div>
+          <p class="value" id="toObstacleOut">—</p>
+        </div>
+        <div class="result-row">
+          <p class="label">Doporučená rezerva (odhad × 1,5)</p>
+          <p class="value" id="toRecommended">—</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="runway-wrap" id="runwayWrap"></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#4a6f8a;"></i> Délka dráhy k dispozici</span>
+      <span><i class="dot" style="background:#3fa9f5;"></i> Odhad bodu odpoutání (ground roll)</span>
+      <span><i class="dot" style="background:#f5524a;"></i> Odhad přeletu 15m překážky</span>
+    </div>
+
+    <div class="note" id="toExplain"></div>
+  </div>
+
+  <div class="panel" style="margin-top:20px;">
+    <h2>Vizuální srovnání výšek</h2>
+    <div class="gauge-wrap">
+      <div class="gauge-track" id="gaugeTrack"></div>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:#8aa0b3"></i> Nadmořská výška letiště</span>
+      <span><i class="dot" style="background:#3fa9f5"></i> Tlaková výška</span>
+      <span><i class="dot" style="background:#f5524a"></i> Hustotní výška</span>
+    </div>
+    <div class="note" id="explainOut"></div>
+  </div>
+
+  <footer>Hustotní výška = tlaková výška upravená o odchylku teploty od standardní atmosféry (ISA). Vyšší hustotní výška = řidší vzduch = horší výkon motoru, vrtule i křídla (delší rozjezd, nižší stoupavost).</footer>
+</div>
+
+<script>
+(function(){
+  const el = id => document.getElementById(id);
+  const elevationInput = el('elevation');
+  const tempInput = el('temp');
+  const pressureInput = el('pressure');
+
+  let tempUnit = 'C';
+  let pressUnit = 'hpa';
+
+  // shared values handed over to the takeoff-distance estimator below
+  let lastDensityAltitude = 0;
+  let lastTakeoffWeight = 348.5; // falls back to empty weight until W&B module computes a value
+
+  function setupToggle(containerId, onChange){
+    const container = el(containerId);
+    container.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        container.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        onChange(btn.dataset.unit);
+      });
+    });
+  }
+
+  setupToggle('tempUnit', (unit)=>{
+    // convert current value when switching units
+    const current = parseFloat(tempInput.value);
+    if(!isNaN(current)){
+      if(unit === 'F' && tempUnit === 'C'){
+        tempInput.value = (current * 9/5 + 32).toFixed(1);
+      } else if(unit === 'C' && tempUnit === 'F'){
+        tempInput.value = ((current - 32) * 5/9).toFixed(1);
+      }
+    }
+    tempUnit = unit;
+    calculate();
+  });
+
+  setupToggle('pressUnit', (unit)=>{
+    const current = parseFloat(pressureInput.value);
+    if(!isNaN(current)){
+      if(unit === 'inhg' && pressUnit === 'hpa'){
+        pressureInput.value = (current / 33.8639).toFixed(2);
+      } else if(unit === 'hpa' && pressUnit === 'inhg'){
+        pressureInput.value = (current * 33.8639).toFixed(2);
+      }
+    }
+    pressUnit = unit;
+    calculate();
+  });
+
+  [elevationInput, tempInput, pressureInput].forEach(inp=>{
+    inp.addEventListener('input', calculate);
+  });
+
+  function toCelsius(t, unit){
+    return unit === 'F' ? (t - 32) * 5/9 : t;
+  }
+  function toHpa(p, unit){
+    return unit === 'inhg' ? p * 33.8639 : p;
+  }
+
+  function fmt(n, unit){
+    return Math.round(n).toLocaleString('cs-CZ') + ' ' + unit;
+  }
+
+  function calculate(){
+    const elevation = parseFloat(elevationInput.value);
+    const tempRaw = parseFloat(tempInput.value);
+    const pressRaw = parseFloat(pressureInput.value);
+
+    if(isNaN(elevation) || isNaN(tempRaw) || isNaN(pressRaw)){
+      return;
+    }
+
+    const oatC = toCelsius(tempRaw, tempUnit);
+    const qnhHpa = toHpa(pressRaw, pressUnit);
+    const altimeterInHg = qnhHpa / 33.8639;
+
+    // Pressure altitude: standard FAA approximation, 1000 ft per inHg deviation from 29.92 inHg
+    const pressureAltitude = elevation + (29.92 - altimeterInHg) * 1000;
+
+    // ISA temperature at that pressure altitude (standard lapse rate 2°C / 1000 ft from 15°C at sea level)
+    const isaTemp = 15 - 2 * (pressureAltitude / 1000);
+
+    // Density altitude: pressure altitude adjusted ~120 ft per °C deviation from ISA temp
+    const densityAltitude = pressureAltitude + 120 * (oatC - isaTemp);
+
+    const diff = densityAltitude - elevation;
+
+    lastDensityAltitude = densityAltitude;
+
+    el('paOut').textContent = fmt(pressureAltitude, 'ft');
+    el('isaOut').textContent = isaTemp.toFixed(1) + ' °C';
+    el('daOut').textContent = fmt(densityAltitude, 'ft');
+    el('diffOut').textContent = (diff >= 0 ? '+' : '') + fmt(diff, 'ft');
+
+    // Badge / warning level based on how much DA exceeds field elevation
+    const badge = el('badgeOut');
+    let level, levelText, explain;
+    if(diff < 1000){
+      level = 'good'; levelText = 'Mírný vliv';
+      explain = 'Hustotní výška je blízko skutečné nadmořské výšce — výkon letadla bude přibližně odpovídat běžným tabulkám pro danou výšku letiště.';
+    } else if(diff < 3000){
+      level = 'warn'; levelText = 'Zvýšená pozornost';
+      explain = 'Hustotní výška je výrazně vyšší než nadmořská výška letiště. Počítej s delším rozjezdem, nižší stoupavostí a horší výkonností motoru i vrtule — zkontroluj výkonové grafy letadla pro tuto hustotní výšku.';
+    } else {
+      level = 'bad'; levelText = 'Vysoké riziko';
+      explain = 'Velmi vysoká hustotní výška oproti nadmořské výšce letiště. Vzduch je výrazně řidší — citelně delší vzletová dráha, slabší stoupavost a snížená nosnost křídla. Pečlivě prověř výkonové limity letadla, zvaž odlet v chladnější části dne nebo se sníženou hmotností.';
+    }
+    badge.className = 'badge ' + level;
+    badge.textContent = levelText;
+    el('explainOut').innerHTML = '<strong>' + levelText + ':</strong> ' + explain;
+
+    drawGauge(elevation, pressureAltitude, densityAltitude);
+
+    if(typeof calcTakeoff === 'function') calcTakeoff();
+  }
+
+  function drawGauge(elevation, pa, da){
+    const track = el('gaugeTrack');
+    track.innerHTML = '';
+
+    const values = [
+      {val: elevation, color:'#8aa0b3', label:'Letiště: ' + Math.round(elevation).toLocaleString('cs-CZ') + ' ft'},
+      {val: pa, color:'#3fa9f5', label:'Tlaková: ' + Math.round(pa).toLocaleString('cs-CZ') + ' ft'},
+      {val: da, color:'#f5524a', label:'Hustotní: ' + Math.round(da).toLocaleString('cs-CZ') + ' ft'}
+    ];
+
+    const allVals = values.map(v=>v.val);
+    let minV = Math.min(0, ...allVals);
+    let maxV = Math.max(...allVals);
+    const span = (maxV - minV) || 1;
+    const padding = span * 0.15;
+    minV -= padding;
+    maxV += padding;
+    const totalSpan = maxV - minV;
+
+    values.forEach(v=>{
+      const pct = (v.val - minV) / totalSpan;
+      const marker = document.createElement('div');
+      marker.className = 'gauge-marker';
+      marker.style.bottom = (pct * 100) + '%';
+      marker.innerHTML = '<div class="mline" style="background:' + v.color + '"></div>' +
+                         '<div class="mtag" style="color:' + v.color + '">' + v.label + '</div>';
+      track.appendChild(marker);
+    });
+  }
+
+  // ---- Weight & balance (Roko VIA, table 6.3 "Dovolené užitečné zatížení") ----
+  const EMPTY_WEIGHT = 348.5;   // kg
+  const MTOW = 600;             // kg
+  const FUEL_DENSITY = 95 / 130; // kg per litre, derived from manual table (~0.731 kg/l)
+
+  // fuel reference points: [litres, kg]
+  const FUEL_LEVELS = [
+    {label:'30 min', l: 8,    kg: 6},
+    {label:'1/4',    l: 32.5, kg: 23.75},
+    {label:'1/2',    l: 65,   kg: 47.5},
+    {label:'3/4',    l: 97.5, kg: 71.25},
+    {label:'plné',   l: 130,  kg: 95}
+  ];
+
+  // baggage rows: weight (kg) + allowed crew weight per fuel level (matches FUEL_LEVELS order)
+  const BAGGAGE_ROWS = [
+    {label:'bez zavazadel',              kg: 0,    crew:[245, 230, 208,   188,   164]},
+    {label:'1/2 zadní',                  kg: 7.5,  crew:[237.5, 222.5, 200.5, 181.5, 156.5]},
+    {label:'celý zadní',                 kg: 15,   crew:[230, 215, 193,   173,   146]},
+    {label:'1/2 křídelních',             kg: 20,   crew:[225, 210, 188,   168,   144]},
+    {label:'1/2 zadní + 1/2 křídelní',   kg: 27.5, crew:[217.5, 202.5, 180.5, 161.5, 136.5]},
+    {label:'1/2 zadní + celý křídelní',  kg: 47.5, crew:[197.5, 182.5, 160.5, 141.5, 116.5]},
+    {label:'celý zadní + celý křídelní', kg: 55,   crew:[190, 175, 153,   133,   106]}
+  ];
+
+  const fuelLevelSelect = el('fuelLevel');
+  const customFuelField = el('customFuelField');
+  const customFuelLiters = el('customFuelLiters');
+  const baggageConfigSelect = el('baggageConfig');
+  const pilotWeightInput = el('pilotWeight');
+  const paxWeightInput = el('paxWeight');
+  let fuelUnit = 'l';
+
+  fuelLevelSelect.addEventListener('change', ()=>{
+    customFuelField.style.display = (fuelLevelSelect.value === 'custom') ? 'block' : 'none';
+    calcWB();
+  });
+  setupToggle('fuelUnitToggle', (unit)=>{
+    const current = parseFloat(customFuelLiters.value);
+    if(!isNaN(current)){
+      if(unit === 'kg' && fuelUnit === 'l'){
+        customFuelLiters.value = (current * FUEL_DENSITY).toFixed(1);
+      } else if(unit === 'l' && fuelUnit === 'kg'){
+        customFuelLiters.value = (current / FUEL_DENSITY).toFixed(1);
+      }
+    }
+    fuelUnit = unit;
+    calcWB();
+  });
+  [customFuelLiters, baggageConfigSelect, pilotWeightInput, paxWeightInput].forEach(inp=>{
+    inp.addEventListener('input', calcWB);
+    inp.addEventListener('change', calcWB);
+  });
+
+  // linear interpolation of allowed crew weight for a given fuel weight (kg) within one baggage row
+  function interpAllowedCrew(rowCrewArr, fuelKg){
+    const kgs = FUEL_LEVELS.map(f=>f.kg);
+    if(fuelKg <= kgs[0]) return rowCrewArr[0];
+    if(fuelKg >= kgs[kgs.length-1]) return rowCrewArr[rowCrewArr.length-1];
+    for(let i=0;i<kgs.length-1;i++){
+      if(fuelKg >= kgs[i] && fuelKg <= kgs[i+1]){
+        const frac = (fuelKg - kgs[i]) / (kgs[i+1]-kgs[i]);
+        return rowCrewArr[i] + frac * (rowCrewArr[i+1]-rowCrewArr[i]);
+      }
+    }
+    return rowCrewArr[rowCrewArr.length-1];
+  }
+
+  function calcWB(){
+    // determine fuel weight in kg
+    let fuelKg, fuelLabel;
+    if(fuelLevelSelect.value === 'custom'){
+      const raw = parseFloat(customFuelLiters.value);
+      if(isNaN(raw)) return;
+      fuelKg = (fuelUnit === 'kg') ? raw : raw * FUEL_DENSITY;
+      fuelLabel = (fuelUnit === 'kg') ? (raw.toFixed(1) + ' kg paliva') : (raw.toFixed(1) + ' l paliva (≈ ' + fuelKg.toFixed(1) + ' kg)');
+    } else {
+      const idx = parseInt(fuelLevelSelect.value, 10);
+      fuelKg = FUEL_LEVELS[idx].kg;
+      fuelLabel = FUEL_LEVELS[idx].label + ' nádrže (' + FUEL_LEVELS[idx].l + ' l / ' + fuelKg + ' kg)';
+    }
+
+    const bagIdx = parseInt(baggageConfigSelect.value, 10);
+    const bagRow = BAGGAGE_ROWS[bagIdx];
+    const allowedCrew = interpAllowedCrew(bagRow.crew, fuelKg);
+
+    const pilot = parseFloat(pilotWeightInput.value) || 0;
+    const pax = parseFloat(paxWeightInput.value) || 0;
+    const actualCrew = pilot + pax;
+    const margin = allowedCrew - actualCrew;
+
+    const takeoffWeight = EMPTY_WEIGHT + fuelKg + bagRow.kg + actualCrew;
+    const usefulLoadLeft = MTOW - takeoffWeight;
+
+    lastTakeoffWeight = takeoffWeight;
+
+    el('wbAllowedCrew').textContent = allowedCrew.toFixed(1) + ' kg';
+    el('wbActualCrew').textContent = actualCrew.toFixed(1) + ' kg';
+    el('wbMargin').textContent = (margin >= 0 ? '+' : '') + margin.toFixed(1) + ' kg';
+    el('wbTakeoffWeight').textContent = takeoffWeight.toFixed(1) + ' kg';
+    el('wbUsefulLoad').textContent = (usefulLoadLeft >= 0 ? '+' : '') + usefulLoadLeft.toFixed(1) + ' kg';
+
+    const badge = el('wbBadge');
+    let level, levelText, explain;
+    if(margin >= 0 && takeoffWeight <= MTOW){
+      level = 'good'; levelText = 'V limitu';
+      explain = 'Zadaná konfigurace odpovídá tabulce 6.3 letové příručky — hmotnost posádky i odhadovaná vzletová hmotnost vychází v rámci dovolených hodnot. Pamatuj, že minimální hmotnost pilota dle příručky je 55 kg a rozsah těžiště musí zůstat 23–36 % SAT — pro reálný let vždy rozhodující je aktuální vážicí protokol tvého konkrétního letadla (Oddíl 6).';
+    } else if(margin >= -10 && takeoffWeight <= MTOW + 10){
+      level = 'warn'; levelText = 'Na hraně limitu';
+      explain = 'Hmotnost posádky a/nebo odhadovaná vzletová hmotnost se pohybuje na hraně nebo lehce nad dovolenou hodnotou z tabulky 6.3. Zvaž snížení množství paliva, zavazadel nebo hmotnosti posádky a hodnoty si ověř podle aktuálního vážicího protokolu letadla.';
+    } else {
+      level = 'bad'; levelText = 'Překročen limit';
+      explain = 'Při této kombinaci paliva, zavazadel a posádky je překročena dovolená hmotnost posádky z tabulky 6.3 a/nebo maximální vzletová hmotnost 600 kg. Tuto konfiguraci neletěte — uberte palivo, zavazadla nebo hmotnost na palubě.';
+    }
+    badge.className = 'badge ' + level;
+    badge.textContent = levelText;
+    el('wbExplain').innerHTML = '<strong>' + levelText + ':</strong> Palivo: ' + fuelLabel + '. Zavazadla: ' + bagRow.label + ' (' + bagRow.kg + ' kg). ' + explain;
+
+    if(typeof calcTakeoff === 'function') calcTakeoff();
+  }
+
+  // ---- Takeoff distance estimator (rule-of-thumb, not official POH data) ----
+
+  // Baseline figures from manual section 5.2.3 — flaps 10°, valid at MTOW (600 kg) and MSA/ISA
+  const TAKEOFF_BASELINE = {
+    paved: { roll: 220, obstacle: 270, label: 'zpevněná (suchý beton)' },
+    grass: { roll: 230, obstacle: 280, label: 'travnatá' }
+  };
+  const VLO_KMH = 70;            // rotation/liftoff speed reference, manual section 4.7 (~38 KIAS)
+  const MAX_HEADWIND_MS = 15;    // manual 5.2.8 — max headwind component for takeoff/landing (30 kt)
+  const MAX_CROSSWIND_MS = 5;    // manual 5.2.8 — max crosswind component for takeoff/landing (10 kt)
+
+  const rwSurfaceSelect = el('rwSurface');
+  const rwLengthInput = el('rwLength');
+  const windSpeedInput = el('windSpeed');
+  const windAngleInput = el('windAngle');
+  let windUnit = 'kmh';
+
+  function windToMs(v, unit){
+    if(unit === 'kt') return v * 0.514444;
+    if(unit === 'kmh') return v / 3.6;
+    return v; // m/s
+  }
+  function msTo(unit, v){
+    if(unit === 'kt') return v / 0.514444;
+    if(unit === 'kmh') return v * 3.6;
+    return v;
+  }
+
+  setupToggle('windUnitToggle', (unit)=>{
+    const current = parseFloat(windSpeedInput.value);
+    if(!isNaN(current)){
+      const ms = windToMs(current, windUnit);
+      windSpeedInput.value = msTo(unit, ms).toFixed(1);
+    }
+    windUnit = unit;
+    calcTakeoff();
+  });
+
+  [rwSurfaceSelect, rwLengthInput, windSpeedInput, windAngleInput].forEach(inp=>{
+    inp.addEventListener('input', calcTakeoff);
+    inp.addEventListener('change', calcTakeoff);
+  });
+
+  function planeIcon(x, y, color){
+    // simple paper-plane silhouette pointing right = direction of travel down the runway
+    return '<g transform="translate(' + x + ',' + y + ')">' +
+      '<polygon points="-15,-8 -15,8 13,0" fill="' + color + '"/>' +
+      '<rect x="-19" y="-2" width="8" height="4" fill="' + color + '"/>' +
+      '</g>';
+  }
+
+  function drawRunway(rwLength, estRoll, estObstacle){
+    const wrap = el('runwayWrap');
+    const W = 1000, H = 250;
+    const padL = 75, padR = 75;
+    const trackY = 150, trackH = 26;
+    const maxDist = Math.max(rwLength, estObstacle) * 1.08;
+    const trackW = W - padL - padR;
+    const scaleX = d => padL + (Math.min(d, maxDist) / maxDist) * trackW;
+    const clampX = x => Math.min(Math.max(x, padL + 60), W - padR - 60);
+
+    const rwEndX = scaleX(rwLength);
+    const rollX = scaleX(estRoll);
+    const obstX = scaleX(estObstacle);
+
+    let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+
+    // terrain baseline beyond the runway
+    svg += '<line x1="' + padL + '" y1="' + (trackY + trackH + 18) + '" x2="' + (W - padR) + '" y2="' + (trackY + trackH + 18) + '" stroke="#27384a" stroke-width="2"/>';
+
+    // runway surface (available length)
+    svg += '<rect x="' + padL + '" y="' + trackY + '" width="' + (rwEndX - padL) + '" height="' + trackH + '" rx="4" fill="#4a6f8a"/>';
+    svg += '<line x1="' + (padL + 8) + '" y1="' + (trackY + trackH/2) + '" x2="' + (rwEndX - 8) + '" y2="' + (trackY + trackH/2) + '" stroke="#cfe3f2" stroke-width="2" stroke-dasharray="14 10" opacity="0.55"/>';
+
+    // start of runway
+    svg += '<line x1="' + padL + '" y1="' + (trackY - 14) + '" x2="' + padL + '" y2="' + (trackY + trackH + 14) + '" stroke="#8aa0b3" stroke-width="2"/>';
+    svg += '<text x="' + clampX(padL) + '" y="' + (trackY + trackH + 38) + '" fill="#8aa0b3" font-size="15" text-anchor="middle">začátek dráhy (0 m)</text>';
+
+    // end of runway
+    svg += '<line x1="' + rwEndX + '" y1="' + (trackY - 14) + '" x2="' + rwEndX + '" y2="' + (trackY + trackH + 14) + '" stroke="#8aa0b3" stroke-width="2"/>';
+    svg += '<text x="' + clampX(rwEndX) + '" y="' + (trackY + trackH + 38) + '" fill="#8aa0b3" font-size="15" text-anchor="middle">konec dráhy (' + Math.round(rwLength) + ' m)</text>';
+
+    // estimated liftoff / ground-roll point — plane icon
+    svg += '<line x1="' + rollX + '" y1="' + (trackY - 50) + '" x2="' + rollX + '" y2="' + (trackY + trackH + 14) + '" stroke="#3fa9f5" stroke-width="2" stroke-dasharray="6 5"/>';
+    svg += planeIcon(rollX, trackY - 66, '#3fa9f5');
+    svg += '<text x="' + clampX(rollX) + '" y="' + (trackY - 78) + '" fill="#3fa9f5" font-size="15" text-anchor="middle">odpoutání ~' + Math.round(estRoll) + ' m</text>';
+
+    // estimated point of clearing the 15 m obstacle
+    svg += '<line x1="' + obstX + '" y1="' + (trackY - 28) + '" x2="' + obstX + '" y2="' + (trackY + trackH + 14) + '" stroke="#f5524a" stroke-width="2" stroke-dasharray="6 5"/>';
+    svg += '<text x="' + clampX(obstX) + '" y="' + (trackY + trackH + 56) + '" fill="#f5524a" font-size="15" text-anchor="middle">15m překážka ~' + Math.round(estObstacle) + ' m</text>';
+
+    svg += '</svg>';
+    wrap.innerHTML = svg;
+  }
+
+  function calcTakeoff(){
+    const surfaceKey = rwSurfaceSelect.value;
+    const baseline = TAKEOFF_BASELINE[surfaceKey];
+    const rwLength = parseFloat(rwLengthInput.value);
+    const windSpeedRaw = parseFloat(windSpeedInput.value);
+    const windAngleRaw = parseFloat(windAngleInput.value);
+
+    if(isNaN(rwLength) || isNaN(windSpeedRaw) || isNaN(windAngleRaw) || !baseline) return;
+
+    const windMs = windToMs(windSpeedRaw, windUnit);
+    const angleRad = windAngleRaw * Math.PI / 180;
+    // 0° = wind straight down the runway towards the aircraft (headwind), 180° = tailwind
+    const headwindMs = windMs * Math.cos(angleRad);   // positive = headwind, negative = tailwind
+    const crosswindMs = Math.abs(windMs * Math.sin(angleRad));
+
+    const vloMs = VLO_KMH / 3.6;
+
+    // --- rule-of-thumb correction factors (clearly NOT from the POH) ---
+    // 1) Density altitude: roughly +10 % distance per 1000 ft of density altitude above the baseline (≈ MSA)
+    const daFactor = 1 + 0.10 * Math.max(0, lastDensityAltitude / 1000);
+
+    // 2) Weight: required distance scales roughly with the square of the weight ratio
+    const weightRatio = lastTakeoffWeight / 600; // MTOW the baseline figures are valid for
+    const weightFactor = Math.pow(Math.max(weightRatio, 0), 2);
+
+    // 3) Wind: ground roll scales roughly with the square of (liftoff speed − headwind component)/(liftoff speed)
+    //    a tailwind (negative headwindMs) increases the effective speed needed and lengthens the roll
+    const windRatio = Math.max(vloMs - headwindMs, 0.1 * vloMs) / vloMs;
+    const windFactor = Math.pow(windRatio, 2);
+
+    const totalFactor = daFactor * weightFactor * windFactor;
+    const estRoll = baseline.roll * totalFactor;
+    const estObstacle = baseline.obstacle * totalFactor;
+    const recommended = estObstacle * 1.5;
+
+    // --- display ---
+    el('toInputsUsed').textContent =
+      fmt(lastDensityAltitude, 'ft DA') + '  •  ' + lastTakeoffWeight.toFixed(0) + ' kg odhad. vzletové hmotnosti';
+
+    const windDir = headwindMs >= 0 ? 'čelní' : 'zadní (po směru)';
+    el('toWindComponents').textContent =
+      Math.abs(headwindMs).toFixed(1) + ' m/s ' + windDir + '  /  ' + crosswindMs.toFixed(1) + ' m/s boční';
+
+    el('toRollOut').textContent = fmt(estRoll, 'm') + '  (základ ' + baseline.roll + ' m × ' + totalFactor.toFixed(2) + ')';
+    el('toObstacleOut').textContent = fmt(estObstacle, 'm') + '  (základ ' + baseline.obstacle + ' m × ' + totalFactor.toFixed(2) + ')';
+    el('toRecommended').textContent = fmt(recommended, 'm') + ' (oproti dráze o délce ' + rwLength.toFixed(0) + ' m)';
+
+    drawRunway(rwLength, estRoll, estObstacle);
+
+    function badgeFor(estimate, elId){
+      const b = el(elId);
+      let level, text;
+      if(estimate * 1.5 <= rwLength){ level = 'good'; text = 'Pohodlná rezerva'; }
+      else if(estimate <= rwLength){ level = 'warn'; text = 'Těsné — malá rezerva'; }
+      else { level = 'bad'; text = 'Nedostatečná dráha'; }
+      b.className = 'badge ' + level;
+      b.textContent = text;
+      return level;
+    }
+    badgeFor(estRoll, 'toBadgeRoll');
+    const obstacleLevel = badgeFor(estObstacle, 'toBadgeObstacle');
+
+    let windWarning = '';
+    if(crosswindMs > MAX_CROSSWIND_MS){
+      windWarning = ' <strong>Pozor:</strong> boční složka větru (' + crosswindMs.toFixed(1) + ' m/s) překračuje povolenou hodnotu z příručky (max. 5 m/s / 10 kt pro vzlet a přistání) — podle příručky je vzlet/přistání za těchto podmínek zakázán.';
+    } else if(headwindMs < -MAX_HEADWIND_MS){
+      windWarning = ' <strong>Pozor:</strong> zadní (po směru) složka větru překračuje povolenou hodnotu čelní/zadní složky z příručky (15 m/s / 30 kt).';
+    }
+
+    let levelText;
+    if(obstacleLevel === 'good') levelText = 'Odhad vychází s pohodlnou rezervou vůči zadané délce dráhy.';
+    else if(obstacleLevel === 'warn') levelText = 'Odhad se blíží zadané délce dráhy — rezerva je malá, zvaž jinou dráhu, nižší hmotnost nebo počkej na příznivější podmínky.';
+    else levelText = 'Odhad přesahuje zadanou délku dráhy — za těchto podmínek by neměla být zadaná dráha pro vzlet dostatečná.';
+
+    el('toExplain').innerHTML =
+      '<strong>Jak je odhad spočítaný (obecná pravidla palce, ne data z příručky):</strong> ' +
+      'základní hodnota z příručky (5.2.3, ' + baseline.label + ', klapky 10°, MTOW, MSA) je vynásobena třemi korekčními faktory — ' +
+      'hustotní výška (≈ +10 % na každých 1000 ft DA nad MSA → ' + daFactor.toFixed(2) + '×), ' +
+      'aktuální odhadovaná hmotnost vůči MTOW na druhou (→ ' + weightFactor.toFixed(2) + '×) ' +
+      'a vítr — poměr (rychlost odpoutání ' + VLO_KMH + ' km/h mínus čelní složka větru) ku rychlosti odpoutání, na druhou (→ ' + windFactor.toFixed(2) + '×). ' +
+      'Výsledný násobitel: ' + totalFactor.toFixed(2) + '×. ' + levelText + windWarning +
+      ' Toto je <strong>orientační odhad</strong>, ne hodnota z letové příručky — vždy si přidej vlastní bezpečnostní rezervu (např. ×1,5, jak je uvedeno výše) a zohledni stav dráhy, sklon, techniku letu i stav letadla.';
+  }
+
+  // ---- Vlastní databáze letišť / SLZ (statický snímek z VFR příručky AIM ŘLP ČR) ----
+  const AIRPORTS = [
+    {
+      code: 'LKZB',
+      name: 'Zbraslavice',
+      kind: 'Veřejné vnitrostátní letiště (VFR den)',
+      elevation_ft: 1618,
+      elevation_m: 493,
+      circuit_ft: 2618,
+      circuit_m: 793,
+      variation: '3° E (2010)',
+      coords: { lat: 49.8142, lon: 15.2017 }, // ARP 49°48'51"N 15°12'06"E, převedeno na desetinné stupně
+      runways: [
+        {
+          length_m: 780,
+          width_m: 150,
+          surface: 'grass',
+          surfaceNote: 'povrch není v AIP výslovně uveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 780, toda: 810, asda: 780, lda: 780,
+          bearing: '5700 kg / 0,4 MPa',
+          ends: [
+            { ident: '15', heading: 154 },
+            { ident: '33', heading: 334 }
+          ]
+        }
+      ],
+      note: 'ARP 49°48\'51" N, 15°12\'06" E (2,2 km GEO 080 od Zbraslavic). Letiště pod MTMA Čáslav. ' +
+            'Komunikace u THR RWY 15 přelétávat min. 15 m nad terénem.',
+      source: 'VFR příručka AIM ŘLP ČR — lkzb_text_cz, ad-lkzb_text_cz.pdf, ad-lkzb_map_cz.pdf (WEF 28 MAY 26)'
+    },
+    {
+      code: 'LKBE',
+      name: 'Benešov',
+      kind: 'Veřejné vnitrostátní letiště / Neveřejné mezinárodní letiště',
+      elevation_ft: 1322,
+      elevation_m: 403,
+      circuit_ft: 2460,
+      circuit_m: 750,
+      coords: { lat: 49.7408, lon: 14.6447 },
+      runways: [
+        { length_m: 720, width_m: 23, surface: 'grass', tora: 720, toda: 750, asda: 720, lda: 720, bearing: '5700 kg / 0,7 MPa',
+          ends: [ { ident: '06', heading: 60 }, { ident: '24', heading: 240 } ] },
+        { length_m: 750, width_m: 18, surface: 'grass', tora: 750, toda: 780, asda: 750, lda: 750, bearing: '5700 kg / 0,7 MPa',
+          ends: [ { ident: '09R', heading: 87 }, { ident: '27L', heading: 267 } ] },
+        { length_m: 750, width_m: 40, surface: 'grass', tora: 750, toda: 780, asda: 750, lda: 750, bearing: '5700 kg / 0,7 MPa',
+          ends: [ { ident: '09L', heading: 87 }, { ident: '27R', heading: 267 } ] }
+      ],
+      note: 'ARP 49°44\'27" N, 14°38\'41" E (5,6 km SSW Benešov). RWY 09L/R vzlet jen se souhlasem dispečera. Provoz VFR den/noc (noc jen RWY 06/24 + TWY C).',
+      source: 'VFR příručka AIM ŘLP ČR — lkbe_text_cz (WEF 16 APR 26)'
+    },
+    {
+      code: 'LKKO',
+      name: 'Kolín',
+      kind: 'Veřejné vnitrostátní letiště',
+      elevation_ft: 925,
+      elevation_m: 282,
+      circuit_ft: 1800,
+      circuit_m: 548,
+      coords: { lat: 50.0019, lon: 15.1733 },
+      runways: [
+        { length_m: 900, width_m: 35, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 900, toda: 960, asda: 900, lda: 900, bearing: '5700 kg / 0,7 MPa',
+          ends: [ { ident: '03R', heading: 26 }, { ident: '21L', heading: 206 } ] },
+        { length_m: 900, width_m: 110, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 900, toda: 960, asda: 900, lda: 900, bearing: '5700 kg / 0,7 MPa',
+          ends: [ { ident: '03L', heading: 26 }, { ident: '21R', heading: 206 } ] }
+      ],
+      note: 'ARP 50°00\'07" N, 15°10\'24" E (2 km SSW Kolín). Vstup do MTMA/MCTR Čáslav jen s povolením MTWR Čáslav. Paralelní provoz na 03L/21R a 03R/21L není možný. Pojíždění jen po RWY.',
+      source: 'VFR příručka AIM ŘLP ČR — lkko_text_cz (WEF 14 MAY 26)'
+    },
+    {
+      code: 'LKHB',
+      name: 'Havlíčkův Brod',
+      kind: 'Veřejné vnitrostátní letiště / Neveřejné mezinárodní letiště',
+      elevation_ft: 1519,
+      elevation_m: 463,
+      circuit_ft: 2500,
+      circuit_m: 760,
+      coords: { lat: 49.5972, lon: 15.5492 },
+      runways: [
+        { length_m: 800, width_m: 50, surface: 'grass', tora: 800, toda: 830, asda: 800, lda: 800, bearing: '5700 kg / 0,7 MPa',
+          ends: [ { ident: '11', heading: 111 }, { ident: '29', heading: 291 } ] }
+      ],
+      note: 'ARP 49°35\'50" N, 15°32\'57" E (2,4 km SW Havlíčkův Brod). Travnatý povrch — po deštích možné snížení provozuschopnosti, v zimě se sníh neodklízí. AD u MTMA Čáslav. Okruhy vždy jižním směrem od RWY, výška 2500 ft/760 m AMSL. Protihluk: nepřelétávat Poděbaby, Březinka, Hurtova Lhota, Šmolovy, Svatý Kříž, okolí žst. Dolík. Provoz vlečných letounů a výcvikové lety cizích provozovatelů jen po dohodě s provozovatelem. Přílet bez radiostanice jen po dohodě.',
+      source: 'VFR příručka AIM ŘLP ČR — lkhb_text_cz'
+    },
+    {
+      code: 'LKCT',
+      name: 'Chotěboř',
+      kind: 'Veřejné vnitrostátní letiště (VFR den)',
+      elevation_ft: 1946,
+      elevation_m: 593,
+      circuit_ft: 2800,
+      circuit_m: 850,
+      coords: { lat: 49.6858, lon: 15.6761 },
+      runways: [
+        { length_m: 1010, width_m: 50, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 1010, toda: 1040, asda: 1010, lda: 1010, bearing: '5700 kg / 0,7 MPa',
+          ends: [ { ident: '35', heading: 345 }, { ident: '17', heading: 165 } ] }
+      ],
+      note: 'ARP 49°41\'09" N, 15°40\'34" E (4 km S Chotěboř). Letiště leží v MTMA Čáslav (LKTRA31, LKTSA20, LKTSA27). RWY může být neprovozuschopná po dlouhotrvajících deštích/sněhu, odklízení sněhu nezajištěno. Přílet bez radiostanice jen po předchozí domluvě. Výška okruhu 2800 ft/850 m AMSL. Protihluk: po vzletu z RWY 35 vybočení vlevo (Dobkov, chatová kolonie u přehrady); na okruhu nepřelétávat Počátky, Dobkov.',
+      source: 'VFR příručka AIM ŘLP ČR — lkct_text_cz (WEF 28 MAY 26)'
+    },
+    {
+      code: 'LKBO',
+      name: 'Bohuňovice',
+      kind: 'Neveřejné vnitrostátní letiště',
+      elevation_ft: 774,
+      elevation_m: 236,
+      circuit_ft: 1440,
+      circuit_m: 440,
+      coords: { lat: 49.6706, lon: 17.295 },
+      runways: [
+        { length_m: 830, width_m: 18, surface: 'grass', tora: 830, toda: 860, asda: 830, lda: 830, bearing: '5500 kg / 0,7 MPa',
+          ends: [ { ident: '07', heading: 74 }, { ident: '25', heading: 254 } ] }
+      ],
+      note: 'ARP 49°40\'14" N, 17°17\'42" E (0,5 km GEO 100° od Bohuňovic). Travnatý povrch — možnost omezení po větších deštích, v zimě se sníh neodklízí. Provoz jednosměrný kvůli překážkám: RWY 07 pouze pro vzlety, RWY 25 pouze pro přistání. Provozní doba nestanovena, pouze O/R. Výška okruhu 1440 ft/440 m AMSL.',
+      source: 'VFR příručka AIM ŘLP ČR — lkbo_text_cz'
+    },
+    {
+      code: 'LKBR',
+      name: 'Broumov',
+      kind: 'Veřejné vnitrostátní letiště (VFR den)',
+      elevation_ft: 1342,
+      elevation_m: 409,
+      circuit_ft: 2330,
+      circuit_m: 710,
+      coords: { lat: 50.5619, lon: 16.3428 },
+      runways: [
+        { length_m: 920, width_m: 18, surface: 'grass', surfaceNote: 'travnatá RWY; přilehlý asfaltový pás je nepoužitelný',
+          tora: 920, toda: 1020, asda: 920, lda: 920, bearing: '5700 kg / 0,34 MPa',
+          ends: [ { ident: '14', heading: 137 }, { ident: '32', heading: 317 } ] }
+      ],
+      note: 'ARP 50°33\'43" N, 16°20\'34" E (2,5 km od Broumova). RWY po dlouhotrvajících deštích nezpůsobilé, sníh se neodklízí. Okruhy: RWY 14 levé, RWY 32 pravé, výška 2330 ft/710 m AMSL. Telekomunikační stožár 47 m mezi 1.–2. zatáčkou RWY 14L. Mimo provozní dobu přílety/odlety jen po dohodě s provozovatelem; totéž pro letouny délky ≥9 m nebo šířky trupu >2 m.',
+      source: 'VFR příručka AIM ŘLP ČR — lkbr_text_cz'
+    },
+    {
+      code: 'LKBA',
+      name: 'Břeclav',
+      kind: 'Veřejné vnitrostátní letiště',
+      elevation_ft: 525,
+      elevation_m: 160,
+      circuit_ft: 1500,
+      circuit_m: 457,
+      coords: { lat: 48.7908, lon: 16.8925 },
+      runways: [
+        { length_m: 740, width_m: 60, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 740, toda: 770, asda: 740, lda: 740, bearing: '5700 kg / 0,7 MPa',
+          ends: [ { ident: '08', heading: 80 }, { ident: '26', heading: 260 } ] }
+      ],
+      note: 'ARP 48°47\'27" N, 16°53\'33" E (3,5 km N Břeclav). V zimě letiště neudržované. Vzlety z RWY 08 a přistání na RWY 26 kříží silnice se světelnou signalizací řízenou dispečerem — i tak přelétávat komunikaci u prahu RWY 26 minimálně 15 m nad zemí. Okruhy: RWY 08 levé, RWY 26 pravé, výška 1500 ft/457 m AMSL, nepřelétávat obec Ladná. Po vzletu z RWY 26 omezené možnosti nouzového přistání (zahrádkářská kolonie). Při jižním větru turbulence za hájkem.',
+      source: 'VFR příručka AIM ŘLP ČR — lkba_text_cz'
+    },
+    {
+      code: 'LKBU',
+      name: 'Bubovice',
+      kind: 'Veřejné vnitrostátní letiště',
+      elevation_ft: 1398,
+      elevation_m: 426,
+      circuit_ft: 2500,
+      circuit_m: 750,
+      coords: { lat: 49.9744, lon: 14.1781 },
+      runways: [
+        { length_m: 730, width_m: 23, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 730, toda: 760, asda: 730, lda: 730, bearing: '5700 kg / 0,4 MPa',
+          ends: [ { ident: '10R', heading: 102 }, { ident: '28L', heading: 282 } ] },
+        { length_m: 720, width_m: 30, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 720, toda: 750, asda: 720, lda: 720, bearing: '5700 kg / 0,4 MPa',
+          ends: [ { ident: '10L', heading: 102 }, { ident: '28R', heading: 282 } ] }
+      ],
+      note: 'ARP 49°58\'28" N, 14°10\'41" E (7,5 km od Berouna, 0,9 km od Bubovic). Provoz omezen blízkostí LKPR (CTR Ruzyně, TMA I/II Praha) — mimo provozní dobu jen jednotlivé přílety/odlety cizích letadel. Provoz bez radiostanice jen po dohodě s provozovatelem. Motorové padákové kluzáky jen jižně od osy RWY 10R/28L a mimo okruh. Provoz vrtulníků jen po dohodě (mimo HEMS a státní lety). Výška okruhu 2500 ft/750 m AMSL.',
+      source: 'VFR příručka AIM ŘLP ČR — lkbu_text_cz'
+    },
+    {
+      code: 'LKCE',
+      name: 'Česká Lípa',
+      kind: 'Veřejné vnitrostátní letiště',
+      elevation_ft: 929,
+      elevation_m: 283,
+      circuit_ft: 1920,
+      circuit_m: 585,
+      coords: { lat: 50.7094, lon: 14.5667 },
+      runways: [
+        { length_m: 700, width_m: 40, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 700, toda: 700, asda: 700, lda: 700, bearing: '5700 kg / 0,5 MPa',
+          ends: [ { ident: '13', heading: 129 }, { ident: '31', heading: 309 } ] }
+      ],
+      note: 'ARP 50°42\'34" N, 14°34\'00" E (3,5 km NNE Česká Lípa). Okruhy: RWY 13 levé, RWY 31 pravé, výška 1920 ft/585 m AMSL. Po déletrvajících/silných deštích možná nezpůsobilost RWY. Mimo provozní dobu přílety/odlety jen po dohodě s provozovatelem; totéž pro letouny délky ≥9 m nebo šířky trupu >2 m.',
+      source: 'VFR příručka AIM ŘLP ČR — lkce_text_cz'
+    },
+    {
+      code: 'LKCS',
+      name: 'České Budějovice',
+      kind: 'Veřejné vnitrostátní letiště / Neveřejné mezinárodní letiště (VFR/IFR)',
+      elevation_ft: 1417,
+      elevation_m: 432,
+      circuit_ft: 2400,
+      circuit_m: 730,
+      coords: { lat: 48.9464, lon: 14.4275 },
+      runways: [
+        { length_m: 2500, width_m: 45, surface: 'paved', surfaceNote: 'zpevněná RWY (beton/živice) — PCN 49/R/B/W/T (rigid pavement); přesný materiál v textu výslovně neuveden, ověř před letem',
+          tora: 2500, toda: 2560, asda: 2500, lda: 2200, bearing: 'PCN 49/R/B/W/T',
+          ends: [ { ident: '09', heading: 85 }, { ident: '27', heading: 265 } ] }
+      ],
+      note: 'ARP 48°56\'47" N, 14°25\'39" E (6,5 km SW od centra Č. Budějovic, západně od Vltavy). Velké veřejné letiště s ATZ a VFR/IFR provozem — pro ultralight provoz nutná koordinace s AFIS/řízením, RWY 09 má kratší LDA (2200 m). Úklid sněhu jen v omezeném rozsahu. Pojezdové dráhy betonové (TWY A, B).',
+      source: 'VFR příručka AIM ŘLP ČR — lkcs_text_cz'
+    },
+    {
+      code: 'LKDK',
+      name: 'Dvůr Králové',
+      kind: 'Veřejné vnitrostátní letiště (VFR den)',
+      elevation_ft: 925,
+      elevation_m: 282,
+      circuit_ft: 2000,
+      circuit_m: 610,
+      coords: { lat: 50.4142, lon: 15.8369 },
+      runways: [
+        { length_m: 846, width_m: 18, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; přednostně určena pro letouny, motorové kluzáky a SLZ',
+          tora: 846, toda: 876, asda: 846, lda: 846, bearing: '5700 kg / 0,4 MPa',
+          ends: [ { ident: '10L', heading: 98 }, { ident: '28R', heading: 278 } ] },
+        { length_m: 846, width_m: 82, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 846, toda: 876, asda: 846, lda: 846, bearing: '5700 kg / 0,4 MPa',
+          ends: [ { ident: '10R', heading: 98 }, { ident: '28L', heading: 278 } ] }
+      ],
+      note: 'ARP 50°24\'51" N, 15°50\'13" E (2,5 km SE Dvůr Králové). RWY 10L/28R přednostně pro letouny, motorové kluzáky a SLZ a pro provoz mimo provozní dobu/bez radiostanice. Okruhy na sever, výška 2000 ft/610 m AMSL. Protihluk: zákaz letu nad obcemi pod 2000 ft/610 m AMSL. Komunikaci východně od prahu RWY 28 přelétávat min. 15 m nad zemí.',
+      source: 'VFR příručka AIM ŘLP ČR — lkdk_text_cz'
+    },
+    {
+      code: 'LKER',
+      name: 'Erpužice',
+      kind: 'Neveřejné vnitrostátní letiště',
+      elevation_ft: 1568,
+      elevation_m: 478,
+      circuit_ft: 2560,
+      circuit_m: 780,
+      coords: { lat: 49.8028, lon: 13.0381 },
+      runways: [
+        { length_m: 860, width_m: 40, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 860, toda: 890, asda: 860, lda: 860, bearing: '5700 kg / 0,7 MPa',
+          ends: [ { ident: '11', heading: 108 }, { ident: '29', heading: 288 } ] }
+      ],
+      note: 'ARP 49°48\'10" N, 13°02\'17" E (500 m od Erpužic, GEO 180°). Sníh se neodklízí. Okruhy: RWY 11 pravé, RWY 29 levé, výška 2560 ft/780 m AMSL. VFR vstupní/výstupní body Černošín a Líšťany ve 2560 ft/780 m AMSL. Provoz bez radiostanice jen po dohodě s dispečerem. Komunikace u prahů RWY 11/29 přelétávat min. 15 m nad zemí.',
+      source: 'VFR příručka AIM ŘLP ČR — lker_text_cz'
+    },
+    {
+      code: 'LKFR',
+      name: 'Frýdlant',
+      kind: 'Veřejné vnitrostátní letiště',
+      elevation_ft: 1440,
+      elevation_m: 439,
+      circuit_ft: 2420,
+      circuit_m: 737,
+      coords: { lat: 49.5894, lon: 18.3792 },
+      runways: [
+        { length_m: 770, width_m: 65, surface: 'grass', surfaceNote: 'povrch v textu výslovně neuveden — dle dostupných zdrojů travnatá; ověř před letem',
+          tora: 770, toda: 800, asda: 770, lda: 770, bearing: '5700 kg / 0,4 MPa',
+          ends: [ { ident: '08', heading: 84 }, { ident: '26', heading: 264 } ] }
+      ],
+      note: 'ARP 49°35\'22" N, 18°22\'45" E (1,5 km GEO 090° od Frýdlantu n. Ostravicí). Sníh se neodklízí, RWY nepoužitelná po dlouhotrvajících deštích. Okruhy: RWY 08 levé, RWY 26 levé i pravé, výška 2420 ft/737 m AMSL. V ATZ a okolí možný intenzivní provoz závěsných/padákových kluzáků a navijákové vzlety kluzáků. Možnost výskytu osob v prostoru prahů RWY 08/26 a na jižním okraji pásu — zvýšená opatrnost při vzletu/přistání/pojíždění.',
+      source: 'VFR příručka AIM ŘLP ČR — lkfr_text_cz'
+    }
+  ];
+
+  const airportSelect = el('airportSelect');
+  const airportInfo = el('airportInfo');
+  const runwayEndField = el('runwayEndField');
+  const runwayEndSelect = el('runwayEndSelect');
+  const weatherFetchField = el('weatherFetchField');
+  const fetchWeatherBtn = el('fetchWeatherBtn');
+  const weatherInfo = el('weatherInfo');
+
+  AIRPORTS.forEach((ad, i)=>{
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = ad.code + ' — ' + ad.name + ' (ELEV ' + ad.elevation_ft + ' ft / ' + ad.elevation_m + ' m)';
+    airportSelect.appendChild(opt);
+  });
+
+  // rozdíl dvou směrů normalizovaný na 0-180° (0 = po směru, 180 = proti směru) —
+  // přesně odpovídá konvenci pole "Úhel větru vůči ose dráhy" v modulu odhadu vzletu
+  function angleDiff180(a, b){
+    let d = Math.abs(a - b) % 360;
+    if(d > 180) d = 360 - d;
+    return d;
+  }
+
+  function applyAirport(){
+    const idx = airportSelect.value;
+    weatherInfo.style.display = 'none';
+    weatherInfo.innerHTML = '';
+    if(idx === ''){
+      airportInfo.style.display = 'none';
+      airportInfo.innerHTML = '';
+      runwayEndField.style.display = 'none';
+      weatherFetchField.style.display = 'none';
+      runwayEndSelect.innerHTML = '';
+      return;
+    }
+    const ad = AIRPORTS[parseInt(idx, 10)];
+    if(!ad) return;
+
+    // 1) nadmořská výška -> Density Altitude modul
+    elevationInput.value = ad.elevation_ft;
+    calculate();
+
+    // 2) první uvedená dráha -> modul odhadu vzletu
+    const rwy = ad.runways && ad.runways[0];
+    if(rwy){
+      const rwLengthInput = el('rwLength');
+      const rwSurfaceSelect = el('rwSurface');
+      rwLengthInput.value = rwy.length_m;
+      if(rwy.surface === 'grass' || rwy.surface === 'paved'){
+        rwSurfaceSelect.value = rwy.surface;
+      }
+      if(typeof calcTakeoff === 'function') calcTakeoff();
+    }
+
+    // 3) výběr aktivního prahu dráhy (pro výpočet úhlu větru) + tlačítko počasí
+    runwayEndSelect.innerHTML = '';
+    let endsCount = 0;
+    (ad.runways || []).forEach(r=>{
+      (r.ends || []).forEach(e=>{
+        const opt = document.createElement('option');
+        opt.value = String(e.heading);
+        opt.textContent = 'RWY ' + e.ident + ' (kurz ' + e.heading + '°)';
+        runwayEndSelect.appendChild(opt);
+        endsCount++;
+      });
+    });
+    if(endsCount > 0){
+      runwayEndField.style.display = 'block';
+    } else {
+      runwayEndField.style.display = 'none';
+    }
+    weatherFetchField.style.display = (ad.coords && endsCount > 0) ? 'block' : 'none';
+
+    // automaticky stáhni aktuální počasí pro nově vybrané letiště (lze pak ručně upravit)
+    if(ad.coords && endsCount > 0){
+      fetchWeather();
+    }
+
+    // 4) souhrnná informační karta
+    let rwyHtml = '';
+    (ad.runways || []).forEach(r=>{
+      const idents = (r.ends || []).map(e=>e.ident).join('/');
+      const headings = (r.ends || []).map(e=>e.heading + '°').join(' / ');
+      rwyHtml += '<div style="margin-top:6px;">' +
+        '<strong>RWY ' + idents + '</strong> — kurzy ' + headings + ', rozměry ' + r.length_m + ' × ' + r.width_m + ' m' +
+        (r.surfaceNote ? ' <span style="color:var(--muted);">(' + r.surfaceNote + ')</span>' : '') + '<br>' +
+        'TORA/TODA/ASDA/LDA: ' + r.tora + ' / ' + r.toda + ' / ' + r.asda + ' / ' + r.lda + ' m · únosnost ' + r.bearing +
+        '</div>';
+    });
+    airportInfo.innerHTML =
+      '<strong>' + ad.code + ' ' + ad.name + '</strong> — ' + ad.kind + '<br>' +
+      'ELEV: ' + ad.elevation_ft + ' ft / ' + ad.elevation_m + ' m · okruh ' + ad.circuit_ft + ' ft / ' + ad.circuit_m + ' m · ' +
+      'deklinace ' + ad.variation +
+      rwyHtml +
+      '<div style="margin-top:6px;">' + ad.note + '</div>' +
+      '<div style="margin-top:6px;color:var(--muted);font-size:0.8rem;">Zdroj: ' + ad.source + ' — staticky uloženo, ověř aktuální VFR příručku před letem.</div>' +
+      '<div style="margin-top:8px;"><strong>Automaticky předvyplněno:</strong> nadmořská výška do Density Altitude modulu' +
+      (rwy ? '; délka a povrch dráhy do modulu odhadu vzletu (RWY ' + (rwy.ends||[]).map(e=>e.ident).join('/') + ')' : '') + '.</div>';
+    airportInfo.style.display = 'block';
+  }
+
+  // ---- Živé počasí přes Open-Meteo (zdarma, bez API klíče, CORS povoleno) ----
+  function fetchWeather(){
+    const idx = airportSelect.value;
+    if(idx === '') return;
+    const ad = AIRPORTS[parseInt(idx, 10)];
+    if(!ad || !ad.coords) return;
+    const heading = parseFloat(runwayEndSelect.value);
+    if(isNaN(heading)) return;
+
+    fetchWeatherBtn.disabled = true;
+    fetchWeatherBtn.textContent = '⏳ Načítám aktuální počasí…';
+    weatherInfo.style.display = 'block';
+    weatherInfo.innerHTML = 'Stahuji data z Open-Meteo pro souřadnice ' + ad.coords.lat.toFixed(4) + ', ' + ad.coords.lon.toFixed(4) + '…';
+
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + ad.coords.lat +
+      '&longitude=' + ad.coords.lon +
+      '&current=temperature_2m,pressure_msl,wind_speed_10m,wind_direction_10m' +
+      '&wind_speed_unit=ms&timezone=auto';
+
+    fetch(url)
+      .then(r=>{
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(data=>{
+        const c = data && data.current;
+        if(!c) throw new Error('Neočekávaná odpověď API');
+
+        const temp = c.temperature_2m;
+        const pressure = c.pressure_msl;
+        const windSpeedMs = c.wind_speed_10m;
+        const windDir = c.wind_direction_10m;
+        const angle = angleDiff180(windDir, heading);
+
+        // přepiš vstupy v Density Altitude modulu
+        if(typeof temp === 'number'){
+          tempInput.value = temp;
+          if(tempUnit !== 'C'){
+            tempUnit = 'C';
+            el('tempUnit').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.unit === 'C'));
+          }
+        }
+        if(typeof pressure === 'number'){
+          pressureInput.value = pressure;
+          if(pressUnit !== 'hpa'){
+            pressUnit = 'hpa';
+            el('pressUnit').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.unit === 'hpa'));
+          }
+        }
+        calculate();
+
+        // přepiš vstupy v modulu odhadu vzletu
+        if(typeof windSpeedMs === 'number'){
+          windUnit = 'ms';
+          el('windUnitToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.unit === 'ms'));
+          windSpeedInput.value = windSpeedMs.toFixed(1);
+        }
+        windAngleInput.value = Math.round(angle);
+        if(typeof calcTakeoff === 'function') calcTakeoff();
+
+        const fromLabel = typeof windDir === 'number' ? Math.round(windDir) + '°' : '—';
+        weatherInfo.innerHTML =
+          '<strong>Aktuální počasí (Open-Meteo, ' + (data.timezone || 'lokální čas') + ', ' + (c.time || '') + '):</strong><br>' +
+          'Teplota ' + temp + ' °C · QNH (tlak na hladině moře) ' + pressure + ' hPa · ' +
+          'vítr ' + windSpeedMs.toFixed(1) + ' m/s ze směru ' + fromLabel + '<br>' +
+          'Vůči zvolenému prahu RWY (kurz ' + heading + '°) to vychází na úhel ≈ ' + Math.round(angle) + '° — hodnoty teploty, ' +
+          'tlaku, rychlosti a úhlu větru byly automaticky doplněny výše a přepočítány.<br>' +
+          '<span style="color:var(--muted);font-size:0.8rem;">Zdroj: Open-Meteo (open-meteo.com), bezplatné API bez klíče — jde o ' +
+          '<strong>aktuální předpověď</strong>, ne oficiální METAR/TAF. Pro skutečné rozhodnutí o letu vždy ověř oficiální ' +
+          'meteorologické zdroje (např. ČHMÚ, METAR/TAF nejbližšího letiště).</span>';
+      })
+      .catch(err=>{
+        weatherInfo.innerHTML =
+          '<strong style="color:var(--bad);">Počasí se nepodařilo načíst</strong> (' + err.message + '). ' +
+          'Zkus to prosím znovu, nebo zadej hodnoty ručně. Pokud appku spouštíš přímo ze souboru (file://), ' +
+          'některé prohlížeče mohou blokovat síťové požadavky z lokálních souborů — v takovém případě zkus appku ' +
+          'otevřít přes lokální server (např. <code>python -m http.server</code>).';
+      })
+      .finally(()=>{
+        fetchWeatherBtn.disabled = false;
+        fetchWeatherBtn.textContent = '🌬️ Načíst aktuální počasí (Open-Meteo)';
+      });
+  }
+
+  airportSelect.addEventListener('change', applyAirport);
+  fetchWeatherBtn.addEventListener('click', fetchWeather);
+  // při změně prahu dráhy přenačti počasí — přepočte se úhel větru vůči nově zvolenému kurzu
+  runwayEndSelect.addEventListener('change', fetchWeather);
+
+  calcWB();
+  calculate();
+  calcTakeoff();
+
+  // Registrace service workeru — umožní appku "nainstalovat" a používat i offline.
+  // Funguje jen při servírování přes http(s) (ne přímo z file://) — viz README_PWA.md.
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {
+        // tichý fallback — appka funguje i bez service workeru, jen bez offline režimu
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

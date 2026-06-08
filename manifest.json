@@ -1,0 +1,26 @@
+{
+  "name": "Density Altitude Calculator — Roko VIA",
+  "short_name": "DensityAlt",
+  "description": "Výpočet hustotní výšky, odhad vzletu a hmotnost a vyvážení pro Roko VIA — s databází letišť a živým počasím z Open-Meteo.",
+  "start_url": "./density_altitude_calculator.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1720",
+  "theme_color": "#0f1720",
+  "lang": "cs",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
