@@ -1520,7 +1520,329 @@
       ],
       note: 'Mezinárodní letiště s TWR (Letiště Karlovy Vary s.r.o.). Výška okruhu v textu nenalezena — ověř před letem. RWY 29/11 zpevněná (hlavní), RWY 30/12 travnatá (rovnoběžná).',
       source: 'VFR příručka AIM ŘLP ČR — lkkv_text_cz (WEF 28 MAY 26)'
-    }
+    },
+  // ── Batch 3 — LKLB…LKZL (WEF 28 MAY 26) ──────────────────────────────────
+  {
+    code: 'LKLB', name: 'Liberec', kind: 'Neveřejné mezinárodní letiště',
+    elevation_ft: 1329, elevation_m: 405, circuit_ft: 2300, circuit_m: 701,
+    variation: '3° E (2010)', coords: { lat: 50.7683, lon: 15.025 },
+    runways: [
+      { length_m: 1020, width_m: 23, surface: 'grass', bearing: '5700 kg / 0.5 MPa',
+        tora: 1020, toda: 1080, asda: 1020, lda: 900,
+        ends: [{ ident: '15L', heading: 150 }, { ident: '33R', heading: 330 }] },
+      { length_m: 1020, width_m: 50, surface: 'grass', bearing: '5700 kg / 0.5 MPa',
+        tora: 1020, toda: 1080, asda: 1020, lda: 900,
+        ends: [{ ident: '15R', heading: 150 }, { ident: '33L', heading: 330 }] }
+    ],
+    note: 'Dvě rovnoběžné RWY. 15L/33R (23 m): letouny + UL; 15R/33L (50 m): kluzáky. Okruhy nad zástavbou Liberce mimo traťový úsek zakázány.',
+    source: 'VFR příručka AIM ŘLP ČR — lklb_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKLT', name: 'Letňany', kind: 'Veřejné vnitrostátní / neveřejné mezinárodní letiště',
+    elevation_ft: 912, elevation_m: 278, circuit_ft: 1900, circuit_m: 580,
+    variation: '3° E (2010)', coords: { lat: 50.1314, lon: 14.5256 },
+    runways: [
+      { length_m: 860, width_m: 23, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 1000, toda: 1030, asda: 1030, lda: 860,
+        ends: [{ ident: '05L', heading: 44 }, { ident: '23R', heading: 224 }] },
+      { length_m: 800, width_m: 25, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 920, toda: 950, asda: 920, lda: 800,
+        ends: [{ ident: '05R', heading: 46 }, { ident: '23L', heading: 226 }] }
+    ],
+    note: 'Letiště leží v MCTR Kbely; okruh zasahuje do CTR Ruzyně. Koordinace nutná. Dodržovat výšku okruhu dle VFR-AD-LKLT-VOC.',
+    source: 'VFR příručka AIM ŘLP ČR — lklt_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKMO', name: 'Most', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1086, elevation_m: 331, circuit_ft: 2060, circuit_m: 625,
+    variation: '3° E (2010)', coords: { lat: 50.525, lon: 13.6831 },
+    runways: [
+      { length_m: 1130, width_m: 30, surface: 'grass', bearing: '5700 kg / 0.5 MPa',
+        tora: 1130, toda: 1190, asda: 1130, lda: 1130,
+        ends: [{ ident: '02L', heading: 18 }, { ident: '20R', heading: 198 }] },
+      { length_m: 1130, width_m: 70, surface: 'grass', bearing: '5700 kg / 0.5 MPa',
+        tora: 1130, toda: 1190, asda: 1130, lda: 1130,
+        ends: [{ ident: '02R', heading: 18 }, { ident: '20L', heading: 198 }] }
+    ],
+    note: 'RWY 02L/R pravé okruhy, RWY 20L/R levé okruhy.',
+    source: 'VFR příručka AIM ŘLP ČR — lkmo_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKMR', name: 'Mariánské Lázně', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1768, elevation_m: 539, circuit_ft: 2770, circuit_m: 844,
+    variation: '3° E (2010)', coords: { lat: 49.9228, lon: 12.7247 },
+    runways: [
+      { length_m: 1035, width_m: 50, surface: 'grass', bearing: '2000 kg / 0.4 MPa',
+        tora: 1035, toda: 1095, asda: 1035, lda: 1035,
+        ends: [{ ident: '15', heading: 147 }, { ident: '33', heading: 327 }] }
+    ],
+    note: 'Dle VFR-SUP 14/14 bylo letiště dočasně uzavřeno — před letem ověř aktuální NOTAM.',
+    source: 'VFR příručka AIM ŘLP ČR — lkmr_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKMT', name: 'Ostrava / Mošnov', kind: 'Veřejné mezinárodní letiště',
+    elevation_ft: 844, elevation_m: 257, circuit_ft: 0, circuit_m: 0,
+    variation: '3° E (2010)', coords: { lat: 49.6961, lon: 18.1108 },
+    runways: [
+      { length_m: 3511, width_m: 63, surface: 'paved', bearing: 'PCN 50/R/B/W/T',
+        tora: 3511, toda: 3811, asda: 3511, lda: 3511,
+        ends: [{ ident: '04', heading: 40 }, { ident: '22', heading: 220 }] }
+    ],
+    note: 'Mezinárodní letiště s TWR. Slotové koordinované letiště. Výška okruhu v textu neuvedena — ověř před letem.',
+    source: 'VFR příručka AIM ŘLP ČR — lkmt_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKNM', name: 'Nové Město nad Metují', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1001, elevation_m: 305, circuit_ft: 1970, circuit_m: 600,
+    variation: '3° E (2010)', coords: { lat: 50.3642, lon: 16.1136 },
+    runways: [
+      { length_m: 874, width_m: 30, surface: 'grass', bearing: '5700 kg / 0.7 MPa',
+        tora: 874, toda: 904, asda: 874, lda: 874,
+        ends: [{ ident: '36', heading: 356 }, { ident: '18', heading: 176 }] },
+      { length_m: 927, width_m: 30, surface: 'grass', bearing: '5700 kg / 0.7 MPa',
+        tora: 927, toda: 957, asda: 927, lda: 927,
+        ends: [{ ident: '08', heading: 76 }, { ident: '26', heading: 256 }] }
+    ],
+    note: 'Dvě křížící se travnaté RWY. Okruhy na západ. Komín 1,7 km E (GEO 088°), ELEV 418 m.',
+    source: 'VFR příručka AIM ŘLP ČR — lknm_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKOL', name: 'Olomouc', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 869, elevation_m: 265, circuit_ft: 1800, circuit_m: 550,
+    variation: '3° E (2010)', coords: { lat: 49.5872, lon: 17.21 },
+    runways: [
+      { length_m: 760, width_m: 30, surface: 'grass', bearing: '5700 kg / 0.7 MPa',
+        tora: 760, toda: 790, asda: 760, lda: 760,
+        ends: [{ ident: '09L', heading: 93 }, { ident: '27R', heading: 273 }] },
+      { length_m: 760, width_m: 30, surface: 'grass', bearing: '5700 kg / 0.7 MPa',
+        tora: 760, toda: 790, asda: 760, lda: 760,
+        ends: [{ ident: '09R', heading: 93 }, { ident: '27L', heading: 273 }] },
+      { length_m: 420, width_m: 40, surface: 'paved', bearing: '12000 kg / 1.5 MPa',
+        tora: 420, toda: 450, asda: 420, lda: 420,
+        ends: [{ ident: '10', heading: 93 }, { ident: '28', heading: 273 }] }
+    ],
+    note: 'Dvě rovnoběžné travnaté RWY + krátká zpevněná RWY 10/28. Výskyt zvěře (VFR-SUP 17/23).',
+    source: 'VFR příručka AIM ŘLP ČR — lkol_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKPA', name: 'Polička', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1978, elevation_m: 603, circuit_ft: 2953, circuit_m: 900,
+    variation: '3° E (2010)', coords: { lat: 49.7394, lon: 16.2589 },
+    runways: [
+      { length_m: 1050, width_m: 35, surface: 'grass', bearing: '5700 kg / 0.7 MPa',
+        tora: 1050, toda: 1080, asda: 1050, lda: 1050,
+        ends: [{ ident: '15', heading: 154 }, { ident: '33', heading: 334 }] }
+    ],
+    note: '', source: 'VFR příručka AIM ŘLP ČR — lkpa_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKPD', name: 'Pardubice', kind: 'Veřejné mezinárodní letiště',
+    elevation_ft: 741, elevation_m: 226, circuit_ft: 0, circuit_m: 0,
+    variation: '3° E (2010)', coords: { lat: 50.0133, lon: 15.7386 },
+    runways: [
+      { length_m: 2500, width_m: 75, surface: 'paved', bearing: 'PCN 48/R/B/W/T',
+        tora: 2500, toda: 2715, asda: 2500, lda: 2500,
+        ends: [{ ident: '09', heading: 87 }, { ident: '27', heading: 267 }] }
+    ],
+    note: 'Mezinárodní letiště s TWR. Okruhy zásadně na jih. Výška okruhu v textu nenalezena — ověř NOTAM.',
+    source: 'VFR příručka AIM ŘLP ČR — lkpd_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKPM', name: 'Příbram', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1529, elevation_m: 466, circuit_ft: 2500, circuit_m: 762,
+    variation: '3° E (2010)', coords: { lat: 49.72, lon: 14.1003 },
+    runways: [
+      { length_m: 1380, width_m: 30, surface: 'paved', bearing: 'PCN 25/R/B/Y/U',
+        tora: 1380, toda: 1440, asda: 1380, lda: 1380,
+        ends: [{ ident: '06R', heading: 55 }, { ident: '24L', heading: 235 }] },
+      { length_m: 1000, width_m: 18, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 1000, toda: 1030, asda: 1000, lda: 1000,
+        ends: [{ ident: '06L', heading: 55 }, { ident: '24R', heading: 235 }] }
+    ],
+    note: 'RWY 06R/24L zpevněná (hlavní), RWY 06L/24R travnatá (rovnoběžná).',
+    source: 'VFR příručka AIM ŘLP ČR — lkpm_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKPO', name: 'Přerov', kind: 'Neveřejné mezinárodní letiště',
+    elevation_ft: 676, elevation_m: 206, circuit_ft: 1640, circuit_m: 500,
+    variation: '3° E (2010)', coords: { lat: 49.4258, lon: 17.4047 },
+    runways: [
+      { length_m: 2500, width_m: 60, surface: 'paved', bearing: 'PCN 24/R/D/W/T',
+        tora: 2500, toda: 2560, asda: 2500, lda: 2500,
+        ends: [{ ident: '06', heading: 62 }, { ident: '24', heading: 242 }] },
+      { length_m: 840, width_m: 30, surface: 'grass', bearing: '5700 kg / 0.7 MPa',
+        tora: 840, toda: 870, asda: 840, lda: 840,
+        ends: [{ ident: '05', heading: 62 }, { ident: '23', heading: 242 }] }
+    ],
+    note: 'Neveřejné letiště — povolení min. 2 h před letem. RWY 06/24 zpevněná, RWY 05/23 travnatá. Motorové okruhy na sever.',
+    source: 'VFR příručka AIM ŘLP ČR — lkpo_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKPR', name: 'Praha / Ruzyně', kind: 'Veřejné mezinárodní letiště',
+    elevation_ft: 1234, elevation_m: 376, circuit_ft: 0, circuit_m: 0,
+    variation: '3° E (2010)', coords: { lat: 50.1008, lon: 14.26 },
+    runways: [
+      { length_m: 3715, width_m: 45, surface: 'paved', bearing: 'PCN 75/R/B/W/T',
+        tora: 3715, toda: 3775, asda: 3715, lda: 3715,
+        ends: [{ ident: '06', heading: 60 }, { ident: '24', heading: 240 }] },
+      { length_m: 3250, width_m: 45, surface: 'paved', bearing: 'PCN 62/R/B/X/T',
+        tora: 3250, toda: 3310, asda: 3250, lda: 3250,
+        ends: [{ ident: '12', heading: 122 }, { ident: '30', heading: 302 }] }
+    ],
+    note: 'Mezinárodní letiště s TWR (Letiště Praha, s.p.). Slotové koordinované letiště — slot a povolení ATC nutné. VFR okruh bez TWR clearance zakázán.',
+    source: 'VFR příručka AIM ŘLP ČR — lkpr_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKPS', name: 'Plasy', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1434, elevation_m: 437, circuit_ft: 2420, circuit_m: 737,
+    variation: '3° E (2010)', coords: { lat: 49.9203, lon: 13.377 },
+    runways: [
+      { length_m: 840, width_m: 100, surface: 'grass', bearing: '5700 kg / 0.5 MPa',
+        tora: 840, toda: 955, asda: 840, lda: 840,
+        ends: [{ ident: '03', heading: 34 }, { ident: '21', heading: 214 }] }
+    ],
+    note: '', source: 'VFR příručka AIM ŘLP ČR — lkps_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKRA', name: 'Raná', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 883, elevation_m: 269, circuit_ft: 1870, circuit_m: 570,
+    variation: '3° E (2010)', coords: { lat: 50.4039, lon: 13.7519 },
+    runways: [
+      { length_m: 750, width_m: 100, surface: 'grass', bearing: '5700 kg / 0.34 MPa',
+        tora: 750, toda: 780, asda: 750, lda: 750,
+        ends: [{ ident: '05', heading: 49 }, { ident: '23', heading: 229 }] },
+      { length_m: 850, width_m: 70, surface: 'grass', bearing: '5700 kg / 0.34 MPa',
+        tora: 850, toda: 920, asda: 850, lda: 850,
+        ends: [{ ident: '11', heading: 114 }, { ident: '29', heading: 294 }] }
+    ],
+    note: 'RWY 05/23 a RWY 11/29 se kříží. RWY 23 a RWY 11 pravé okruhy, RWY 05 a RWY 29 levé okruhy.',
+    source: 'VFR příručka AIM ŘLP ČR — lkra_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKRO', name: 'Roudnice', kind: 'Veřejné vnitrostátní / neveřejné mezinárodní letiště',
+    elevation_ft: 728, elevation_m: 222, circuit_ft: 1500, circuit_m: 457,
+    variation: '3° E (2010)', coords: { lat: 50.4106, lon: 14.2261 },
+    runways: [
+      { length_m: 1400, width_m: 63, surface: 'grass', bearing: '10000 kg / 1 MPa',
+        tora: 1400, toda: 1540, asda: 1400, lda: 1400,
+        ends: [{ ident: '13R', heading: 133 }, { ident: '31L', heading: 313 }] },
+      { length_m: 840, width_m: 30, surface: 'grass', bearing: '10000 kg / 1 MPa',
+        tora: 840, toda: 1400, asda: 840, lda: 840,
+        ends: [{ ident: '13L', heading: 133 }, { ident: '31R', heading: 313 }] }
+    ],
+    note: 'Kluzákocentrické letiště. Dodržovat traťovou výšku okruhu — viz VFR-AD-LKRO-VOC.',
+    source: 'VFR příručka AIM ŘLP ČR — lkro_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKSO', name: 'Soběslav', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1335, elevation_m: 407, circuit_ft: 2300, circuit_m: 701,
+    variation: '3° E (2010)', coords: { lat: 49.2467, lon: 14.7136 },
+    runways: [
+      { length_m: 740, width_m: 30, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 740, toda: 770, asda: 740, lda: 740,
+        ends: [{ ident: '18', heading: 182 }, { ident: '36', heading: 2 }] },
+      { length_m: 607, width_m: 24, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 607, toda: 637, asda: 607, lda: 607,
+        ends: [{ ident: '08', heading: 84 }, { ident: '26', heading: 264 }] }
+    ],
+    note: 'RWY 18 pravé okruhy, RWY 36 levé okruhy, RWY 08 pravé okruhy.',
+    source: 'VFR příručka AIM ŘLP ČR — lkso_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKST', name: 'Strakonice', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1378, elevation_m: 420, circuit_ft: 2400, circuit_m: 731,
+    variation: '3° E (2010)', coords: { lat: 49.2517, lon: 13.8928 },
+    runways: [
+      { length_m: 788, width_m: 25, surface: 'grass', bearing: '5700 kg / 0.7 MPa',
+        tora: 788, toda: 818, asda: 788, lda: 788,
+        ends: [{ ident: '13', heading: 127 }, { ident: '31', heading: 307 }] },
+      { length_m: 900, width_m: 100, surface: 'grass', bearing: '5700 kg / 0.7 MPa',
+        tora: 900, toda: 930, asda: 900, lda: 540,
+        ends: [{ ident: '03', heading: 30 }, { ident: '21', heading: 210 }] }
+    ],
+    note: 'RWY 31 a RWY 03 levé okruhy, RWY 13 a RWY 21 pravé okruhy.',
+    source: 'VFR příručka AIM ŘLP ČR — lkst_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKSU', name: 'Šumperk', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1099, elevation_m: 335, circuit_ft: 2100, circuit_m: 640,
+    variation: '3° E (2010)', coords: { lat: 49.9606, lon: 17.0178 },
+    runways: [
+      { length_m: 680, width_m: 18, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 680, toda: 710, asda: 680, lda: 680,
+        ends: [{ ident: '18', heading: 180 }, { ident: '36', heading: 0 }] },
+      { length_m: 700, width_m: 90, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 700, toda: 730, asda: 700, lda: 700,
+        ends: [{ ident: '24', heading: 235 }, { ident: '06', heading: 55 }] }
+    ],
+    note: 'RWY 24 jednosměrná (pravé okruhy, 2100 ft AMSL); RWY 06 pouze nouzové přistání.',
+    source: 'VFR příručka AIM ŘLP ČR — lksu_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKTB', name: 'Brno / Tuřany', kind: 'Veřejné mezinárodní letiště',
+    elevation_ft: 778, elevation_m: 237, circuit_ft: 0, circuit_m: 0,
+    variation: '3° E (2010)', coords: { lat: 49.1514, lon: 16.6939 },
+    runways: [
+      { length_m: 2650, width_m: 60, surface: 'paved', bearing: 'PCN 48/R/A/X/T',
+        tora: 2650, toda: 2950, asda: 2650, lda: 2650,
+        ends: [{ ident: '09', heading: 92 }, { ident: '27', heading: 272 }] },
+      { length_m: 800, width_m: 30, surface: 'grass', bearing: '5700 kg / 1.5 MPa',
+        tora: 800, toda: 860, asda: 800, lda: 800,
+        ends: [{ ident: '08', heading: 92 }, { ident: '26', heading: 272 }] }
+    ],
+    note: 'Mezinárodní letiště s TWR. GA do 2000 kg MTOW povoleno, ale koordinace nutná. Výška okruhu v textu nenalezena — ověř NOTAM.',
+    source: 'VFR příručka AIM ŘLP ČR — lktb_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKVR', name: 'Vrchlabí', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 1611, elevation_m: 491, circuit_ft: 2625, circuit_m: 800,
+    variation: '3° E (2010)', coords: { lat: 50.6242, lon: 15.6464 },
+    runways: [
+      { length_m: 840, width_m: 30, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 840, toda: 840, asda: 840, lda: 840,
+        ends: [{ ident: '11', heading: 105 }, { ident: '29', heading: 285 }] }
+    ],
+    note: 'Po vzletu z RWY 29 zatočit 15° doprava. Akrobacie bez povolení vedoucího provozu zakázána.',
+    source: 'VFR příručka AIM ŘLP ČR — lkvr_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKVY', name: 'Vyškov', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 915, elevation_m: 279, circuit_ft: 1700, circuit_m: 518,
+    variation: '3° E (2010)', coords: { lat: 49.3003, lon: 17.0253 },
+    runways: [
+      { length_m: 1280, width_m: 60, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 1280, toda: 1340, asda: 1280, lda: 1280,
+        ends: [{ ident: '01', heading: 14 }, { ident: '19', heading: 194 }] }
+    ],
+    note: 'Okruhy zásadně na východ — vyhnout se přímému přeletu obytných budov.',
+    source: 'VFR příručka AIM ŘLP ČR — lkvy_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKZA', name: 'Zábřeh', kind: 'Veřejné vnitrostátní letiště',
+    elevation_ft: 794, elevation_m: 242, circuit_ft: 1810, circuit_m: 550,
+    variation: '3° E (2010)', coords: { lat: 49.9283, lon: 18.0783 },
+    runways: [
+      { length_m: 900, width_m: 60, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 900, toda: 950, asda: 900, lda: 900,
+        ends: [{ ident: '10R', heading: 97 }, { ident: '28L', heading: 277 }] }
+    ],
+    note: '', source: 'VFR příručka AIM ŘLP ČR — lkza_text_cz (WEF 28 MAY 26)'
+  },
+  {
+    code: 'LKZL', name: 'Zlín', kind: 'Neveřejné vnitrostátní letiště',
+    elevation_ft: 604, elevation_m: 184, circuit_ft: 2000, circuit_m: 610,
+    variation: '3° E (2010)', coords: { lat: 49.1983, lon: 17.5178 },
+    runways: [
+      { length_m: 650, width_m: 25, surface: 'paved', bearing: 'PCN 19/F/C/Y/T',
+        tora: 650, toda: 700, asda: 800, lda: 650,
+        ends: [{ ident: '17L', heading: 167 }, { ident: '35R', heading: 347 }] },
+      { length_m: 600, width_m: 40, surface: 'grass', bearing: '5700 kg / 0.4 MPa',
+        tora: 600, toda: 600, asda: 600, lda: 600,
+        ends: [{ ident: '17R', heading: 167 }, { ident: '35L', heading: 347 }] }
+    ],
+    note: 'Neveřejné letiště — povolení nutné. Okruhy na západ. RWY 17L/35R zpevněná, RWY 17R/35L travnatá.',
+    source: 'VFR příručka AIM ŘLP ČR — lkzl_text_cz (WEF 28 MAY 26)'
+  }
   ];
 
   const airportSelect = el('airportSelect');
