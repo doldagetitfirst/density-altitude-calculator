@@ -310,14 +310,15 @@
         </div>
       </div>
 
-      <div class="note">
-        <strong>Tip:</strong> Standardní tlak na hladině moře je 1013.25 hPa (29.92 inHg) a standardní teplota je 15 °C. Čím víc se aktuální podmínky liší od těchto hodnot směrem k teplu / nízkému tlaku / vysoké nadmořské výšce, tím vyšší bude hustotní výška vůči skutečné.
-      </div>
     </div>
 
     <div class="panel">
       <h2>Výsledky</h2>
       <div class="results">
+        <div class="result-row">
+          <p class="label">Nadmořská výška letiště</p>
+          <p class="value" id="elevOut">—</p>
+        </div>
         <div class="result-row">
           <p class="label">Tlaková výška (Pressure Altitude)</p>
           <p class="value" id="paOut">—</p>
@@ -337,6 +338,17 @@
           <p class="label">Rozdíl oproti nadmořské výšce letiště</p>
           <p class="value" id="diffOut">—</p>
         </div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="gauge-wrap">
+          <div class="gauge-track" id="gaugeTrack"></div>
+        </div>
+        <div class="legend" style="margin-top:8px;">
+          <span><i class="dot" style="background:#8aa0b3"></i> Nadmořská</span>
+          <span><i class="dot" style="background:#3fa9f5"></i> Tlaková</span>
+          <span><i class="dot" style="background:#f5524a"></i> Hustotní</span>
+        </div>
+        <div class="note" id="explainOut" style="margin-top:8px;"></div>
       </div>
     </div>
   </div>
@@ -417,28 +429,11 @@
         </div>
       </div>
     </div>
-    <div class="note" id="wbExplain"></div>
-    <div class="note">
-      <strong>Pozor — nesrovnalost v manuálu:</strong> Oddíl 2.6 uvádí maximální hmotnost zavazadel v zadní části trupu
-      <strong>10 kg</strong>, zatímco tabulka 6.3 počítá s konfigurací „celý zadní“ až <strong>15 kg</strong>.
-      Než zatížíš zadní prostor nad 10 kg, ověř si aktuální platný limit ve svém výtisku příručky / vážicím protokolu (Oddíl 6, Protokol o hmotnosti a poloze těžiště) — limity se mohou lišit podle sériového čísla a revize.
-      Max. hmotnost zavazadel v každém křídle je <strong>20 kg</strong> (pokud je úložný prostor instalován).
-    </div>
+    <div class=”note” id=”wbExplain”></div>
   </div>
 
   <div class="panel" style="margin-top:20px;">
     <h2>🛫 Odhad délky vzletu — Roko VIA</h2>
-    <p class="subtitle" style="margin-bottom:6px;">
-      Vychází ze základních hodnot z příručky (5.2.3, klapky 10°, <strong>platné pro MTOW 600 kg a podmínky MSA</strong>:
-      zpevněná dráha 220 m rozjezd / 270 m přes překážku 15 m, travnatá 230 m / 280 m), přepočtených pomocí
-      <strong>obecných leteckých pravidel palce</strong> na hustotní výšku, aktuální hmotnost a vítr.
-    </p>
-    <div class="note" style="margin-top:0;">
-      <strong>Důležité:</strong> Příručka VIA neobsahuje vlastní korekční grafy pro hustotní výšku, hmotnost ani vítr —
-      tohle je proto <strong>orientační odhad podle obecných pravidel palce</strong>, ne oficiální číslo z letové příručky.
-      Skutečná délka vzletu se může lišit. K odhadu si vždy přičti vlastní bezpečnostní rezervu (běžně se doporučuje
-      násobit odhad faktorem 1,3–1,5×) a zohledni stav a sklon dráhy, techniku pilotování a stav letadla.
-    </div>
 
     <div class="grid" style="margin-top:6px;">
       <div>
@@ -513,20 +508,16 @@
     <div class="note" id="toExplain"></div>
   </div>
 
-  <div class="panel" style="margin-top:20px;">
-    <h2>Vizuální srovnání výšek</h2>
-    <div class="gauge-wrap">
-      <div class="gauge-track" id="gaugeTrack"></div>
-    </div>
-    <div class="legend">
-      <span><i class="dot" style="background:#8aa0b3"></i> Nadmořská výška letiště</span>
-      <span><i class="dot" style="background:#3fa9f5"></i> Tlaková výška</span>
-      <span><i class="dot" style="background:#f5524a"></i> Hustotní výška</span>
-    </div>
-    <div class="note" id="explainOut"></div>
-  </div>
-
-  <footer>Hustotní výška = tlaková výška upravená o odchylku teploty od standardní atmosféry (ISA). Vyšší hustotní výška = řidší vzduch = horší výkon motoru, vrtule i křídla (delší rozjezd, nižší stoupavost).</footer>
+  <footer>
+    <strong>Jak to funguje</strong><br>
+    Hustotní výška = tlaková výška upravená o odchylku teploty od ISA. Vyšší hustotní výška = řidší vzduch = horší výkon motoru, vrtule i křídel (delší rozjezd, nižší stoupavost).<br><br>
+    <strong>Odhad vzletu</strong><br>
+    Vychází z příručky VIA (5.2.3, klapky 10°, MTOW 600 kg, MSA): zpevněná 220/270 m, travnatá 230/280 m — přepočteno pravidly palce na hustotní výšku, hmotnost a vítr. Příručka VIA neobsahuje korekční grafy — jde o orientační odhad. Přičti bezpečnostní rezervu (×1,3–1,5) a zohledni sklon dráhy, techniku a stav letadla.<br><br>
+    <strong>Hmotnost a vyvážení</strong><br>
+    Podle tabulky 6.3 letové příručky VIA (prázdná 348,5 kg, MTOW 600 kg, těžiště 23–36 % SAT, min. pilot 55 kg). Pozor: oddíl 2.6 uvádí max. zavazadla vzadu 10 kg, tabulka 6.3 počítá s konfigurací až 15 kg — ověř svůj výtisk příručky / vážicí protokol (Oddíl 6). Max. zavazadla v křídle: 20 kg (pokud instalováno).<br><br>
+    <strong>Data letišť</strong><br>
+    Zdroj: VFR příručka AIM ŘLP ČR (WEF 28 MAY 26). Aktualizace databáze neprobíhá automaticky — vždy ověř NOTAM a platný AIP před letem.
+  </footer>
 </div>
 
 <script>
@@ -622,6 +613,7 @@
 
     lastDensityAltitude = densityAltitude;
 
+    el('elevOut').textContent = fmt(elevation, 'ft') + ' (' + Math.round(elevation * 0.3048) + ' m)';
     el('paOut').textContent = fmt(pressureAltitude, 'ft');
     el('isaOut').textContent = isaTemp.toFixed(1) + ' °C';
     el('daOut').textContent = fmt(densityAltitude, 'ft');
