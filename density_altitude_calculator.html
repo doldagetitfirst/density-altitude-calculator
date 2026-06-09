@@ -495,14 +495,13 @@
           <p class="label">Doporučená rezerva (odhad × 1,5)</p>
           <p class="value" id="toRecommended">—</p>
         </div>
+        <div class="runway-wrap" id="runwayWrap"></div>
+        <div class="legend" style="margin-top:10px;">
+          <span><i class="dot" style="background:#4a6f8a;"></i> Délka dráhy</span>
+          <span><i class="dot" style="background:#3fa9f5;"></i> Odpoutání</span>
+          <span><i class="dot" style="background:#f5524a;"></i> 15m překážka</span>
+        </div>
       </div>
-    </div>
-
-    <div class="runway-wrap" id="runwayWrap"></div>
-    <div class="legend">
-      <span><i class="dot" style="background:#4a6f8a;"></i> Délka dráhy k dispozici</span>
-      <span><i class="dot" style="background:#3fa9f5;"></i> Odhad bodu odpoutání (ground roll)</span>
-      <span><i class="dot" style="background:#f5524a;"></i> Odhad přeletu 15m překážky</span>
     </div>
 
     <div class="note" id="toExplain"></div>
@@ -835,53 +834,123 @@
     inp.addEventListener('change', calcTakeoff);
   });
 
+  // top-down GA aircraft pointing right (direction of travel), scale ~32 px wingspan
   function planeIcon(x, y, color){
-    // simple paper-plane silhouette pointing right = direction of travel down the runway
-    return '<g transform="translate(' + x + ',' + y + ')">' +
-      '<polygon points="-15,-8 -15,8 13,0" fill="' + color + '"/>' +
-      '<rect x="-19" y="-2" width="8" height="4" fill="' + color + '"/>' +
+    return '<g transform="translate(' + x + ',' + y + ')" fill="' + color + '">' +
+      // fuselage
+      '<ellipse cx="0" cy="0" rx="18" ry="4.5"/>' +
+      // nose cone
+      '<ellipse cx="17" cy="0" rx="5" ry="3" opacity="0.9"/>' +
+      // main wings (swept)
+      '<polygon points="2,-1 -4,-20 -11,-20 -5,-1"/>' +
+      '<polygon points="2,1 -4,20 -11,20 -5,1"/>' +
+      // horizontal stabiliser
+      '<polygon points="-12,-0.5 -15,-9 -18,-9 -16,-0.5"/>' +
+      '<polygon points="-12,0.5 -15,9 -18,9 -16,0.5"/>' +
+      // vertical fin (top view = slight thickening)
+      '<ellipse cx="-15" cy="0" rx="4" ry="1.5" opacity="0.7"/>' +
       '</g>';
   }
 
-  function drawRunway(rwLength, estRoll, estObstacle){
+  // windArrow: draws a small wind rose in the corner showing direction (0°=headwind, 90°=cross, 180°=tailwind)
+  // cx, cy = centre of the rose, windAngleDeg = app convention (0=head, 180=tail), windMs = m/s
+  function windArrow(cx, cy, windAngleDeg, windMs){
+    const r = 28; // rose radius
+    // convert app wind angle to SVG angle:
+    // app 0° = wind from right (headwind, plane goes left→right), 180° = from left (tailwind)
+    // SVG 0° = right → so headwind arrow tip points left = 180° SVG
+    const svgAngle = (180 - windAngleDeg) * Math.PI / 180;
+    const tipX = cx + r * Math.cos(svgAngle);
+    const tipY = cy + r * Math.sin(svgAngle);
+    const tailX = cx - r * Math.cos(svgAngle);
+    const tailY = cy - r * Math.sin(svgAngle);
+
+    // wind speed label
+    const speedKt = (windMs * 1.944).toFixed(0);
+    const speedKmh = (windMs * 3.6).toFixed(0);
+    const col = windMs < 0.5 ? '#8aa0b3' : windMs < 4 ? '#3fa9f5' : '#f5524a';
+    const label = windMs < 0.5 ? 'bezvětří' : speedKmh + ' km/h';
+
+    let g = '<g>';
+    // background circle
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 12) + '" fill="#0f1822" stroke="#27384a" stroke-width="1.5"/>';
+    // cardinal tick marks
+    [0,90,180,270].forEach(deg => {
+      const rad = deg * Math.PI / 180;
+      g += '<line x1="' + (cx + (r+2)*Math.cos(rad)) + '" y1="' + (cy + (r+2)*Math.sin(rad)) + '" x2="' + (cx + (r+9)*Math.cos(rad)) + '" y2="' + (cy + (r+9)*Math.sin(rad)) + '" stroke="#27384a" stroke-width="1.5"/>';
+    });
+    // runway axis reference line
+    g += '<line x1="' + (cx - r) + '" y1="' + cy + '" x2="' + (cx + r) + '" y2="' + cy + '" stroke="#4a6f8a" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>';
+
+    if(windMs >= 0.5){
+      // wind arrow shaft
+      g += '<line x1="' + tailX + '" y1="' + tailY + '" x2="' + tipX + '" y2="' + tipY + '" stroke="' + col + '" stroke-width="2.5" stroke-linecap="round"/>';
+      // arrowhead
+      const perpX = Math.sin(svgAngle) * 7;
+      const perpY = -Math.cos(svgAngle) * 7;
+      const backX = tipX - Math.cos(svgAngle) * 10;
+      const backY = tipY - Math.sin(svgAngle) * 10;
+      g += '<polygon points="' + tipX + ',' + tipY + ' ' + (backX+perpX) + ',' + (backY+perpY) + ' ' + (backX-perpX) + ',' + (backY-perpY) + '" fill="' + col + '"/>';
+    }
+
+    // speed label centred below rose
+    g += '<text x="' + cx + '" y="' + (cy + r + 24) + '" fill="' + col + '" font-size="13" text-anchor="middle" font-weight="600">' + label + '</text>';
+    g += '</g>';
+    return g;
+  }
+
+  function drawRunway(rwLength, estRoll, estObstacle, rwIdent, airportLabel, windAngleDeg, windMs){
     const wrap = el('runwayWrap');
-    const W = 1000, H = 250;
-    const padL = 75, padR = 75;
-    const trackY = 150, trackH = 26;
+    if(!wrap) return;
+    const W = 1000, H = 270;
+    const padL = 80, padR = 80;
+    const trackY = 155, trackH = 26;
+    const roseR = 40;
+    const roseCX = W - padR - roseR - 4, roseCY = roseR + 16;
+
     const maxDist = Math.max(rwLength, estObstacle) * 1.08;
-    const trackW = W - padL - padR;
+    const trackW = W - padL - padR - (roseR * 2 + 20);  // leave room for wind rose on right
     const scaleX = d => padL + (Math.min(d, maxDist) / maxDist) * trackW;
-    const clampX = x => Math.min(Math.max(x, padL + 60), W - padR - 60);
+    const clampX = x => Math.min(Math.max(x, padL + 60), padL + trackW - 60);
 
     const rwEndX = scaleX(rwLength);
     const rollX = scaleX(estRoll);
     const obstX = scaleX(estObstacle);
 
-    let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+    let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="font-family:sans-serif">';
 
-    // terrain baseline beyond the runway
-    svg += '<line x1="' + padL + '" y1="' + (trackY + trackH + 18) + '" x2="' + (W - padR) + '" y2="' + (trackY + trackH + 18) + '" stroke="#27384a" stroke-width="2"/>';
+    // title: runway designator + airport
+    if(rwIdent || airportLabel){
+      const title = (rwIdent ? rwIdent : '') + (airportLabel ? '  —  ' + airportLabel : '');
+      svg += '<text x="' + padL + '" y="20" fill="#cfe3f2" font-size="14" font-weight="600">' + title + '</text>';
+    }
 
-    // runway surface (available length)
+    // terrain baseline
+    svg += '<line x1="' + padL + '" y1="' + (trackY + trackH + 18) + '" x2="' + (padL + trackW) + '" y2="' + (trackY + trackH + 18) + '" stroke="#27384a" stroke-width="2"/>';
+
+    // runway surface
     svg += '<rect x="' + padL + '" y="' + trackY + '" width="' + (rwEndX - padL) + '" height="' + trackH + '" rx="4" fill="#4a6f8a"/>';
     svg += '<line x1="' + (padL + 8) + '" y1="' + (trackY + trackH/2) + '" x2="' + (rwEndX - 8) + '" y2="' + (trackY + trackH/2) + '" stroke="#cfe3f2" stroke-width="2" stroke-dasharray="14 10" opacity="0.55"/>';
 
     // start of runway
     svg += '<line x1="' + padL + '" y1="' + (trackY - 14) + '" x2="' + padL + '" y2="' + (trackY + trackH + 14) + '" stroke="#8aa0b3" stroke-width="2"/>';
-    svg += '<text x="' + clampX(padL) + '" y="' + (trackY + trackH + 38) + '" fill="#8aa0b3" font-size="15" text-anchor="middle">začátek dráhy (0 m)</text>';
+    svg += '<text x="' + clampX(padL) + '" y="' + (trackY + trackH + 38) + '" fill="#8aa0b3" font-size="14" text-anchor="middle">0 m</text>';
 
     // end of runway
     svg += '<line x1="' + rwEndX + '" y1="' + (trackY - 14) + '" x2="' + rwEndX + '" y2="' + (trackY + trackH + 14) + '" stroke="#8aa0b3" stroke-width="2"/>';
-    svg += '<text x="' + clampX(rwEndX) + '" y="' + (trackY + trackH + 38) + '" fill="#8aa0b3" font-size="15" text-anchor="middle">konec dráhy (' + Math.round(rwLength) + ' m)</text>';
+    svg += '<text x="' + clampX(rwEndX) + '" y="' + (trackY + trackH + 38) + '" fill="#8aa0b3" font-size="14" text-anchor="middle">' + Math.round(rwLength) + ' m</text>';
 
-    // estimated liftoff / ground-roll point — plane icon
+    // estimated liftoff / ground-roll point
     svg += '<line x1="' + rollX + '" y1="' + (trackY - 50) + '" x2="' + rollX + '" y2="' + (trackY + trackH + 14) + '" stroke="#3fa9f5" stroke-width="2" stroke-dasharray="6 5"/>';
     svg += planeIcon(rollX, trackY - 66, '#3fa9f5');
-    svg += '<text x="' + clampX(rollX) + '" y="' + (trackY - 78) + '" fill="#3fa9f5" font-size="15" text-anchor="middle">odpoutání ~' + Math.round(estRoll) + ' m</text>';
+    svg += '<text x="' + clampX(rollX) + '" y="' + (trackY - 80) + '" fill="#3fa9f5" font-size="14" text-anchor="middle">~' + Math.round(estRoll) + ' m</text>';
 
-    // estimated point of clearing the 15 m obstacle
+    // estimated point of clearing 15 m obstacle
     svg += '<line x1="' + obstX + '" y1="' + (trackY - 28) + '" x2="' + obstX + '" y2="' + (trackY + trackH + 14) + '" stroke="#f5524a" stroke-width="2" stroke-dasharray="6 5"/>';
-    svg += '<text x="' + clampX(obstX) + '" y="' + (trackY + trackH + 56) + '" fill="#f5524a" font-size="15" text-anchor="middle">15m překážka ~' + Math.round(estObstacle) + ' m</text>';
+    svg += '<text x="' + clampX(obstX) + '" y="' + (trackY + trackH + 56) + '" fill="#f5524a" font-size="14" text-anchor="middle">~' + Math.round(estObstacle) + ' m</text>';
+
+    // wind rose (top right)
+    svg += windArrow(roseCX, roseCY, windAngleDeg || 0, windMs || 0);
 
     svg += '</svg>';
     wrap.innerHTML = svg;
@@ -934,7 +1003,13 @@
     el('toObstacleOut').textContent = fmt(estObstacle, 'm') + '  (základ ' + baseline.obstacle + ' m × ' + totalFactor.toFixed(2) + ')';
     el('toRecommended').textContent = fmt(recommended, 'm') + ' (oproti dráze o délce ' + rwLength.toFixed(0) + ' m)';
 
-    drawRunway(rwLength, estRoll, estObstacle);
+    // gather runway label info
+    const rwSel = el('runwayEndSelect');
+    const rwIdentText = rwSel && rwSel.options.length > 0 ? rwSel.options[rwSel.selectedIndex].textContent.split(' (')[0] : '';
+    const adSel = el('airportSelect');
+    const adIdx = adSel ? parseInt(adSel.value, 10) : NaN;
+    const adLabel = !isNaN(adIdx) && AIRPORTS[adIdx] ? AIRPORTS[adIdx].code + ' ' + AIRPORTS[adIdx].name : '';
+    drawRunway(rwLength, estRoll, estObstacle, rwIdentText, adLabel, windAngleRaw, windMs);
 
     function badgeFor(estimate, elId){
       const b = el(elId);
